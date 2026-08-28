@@ -1816,7 +1816,7 @@
         parts.push(`起点本金再备 <b>${balShown} 万</b>`);
       }
       if(parts.length){
-        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，二选一：${parts.join('，或 ')}。</span></div>`;
+        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，二选一：${parts.join('，或')}。</span></div>`;
       }else if(safeSpend!=null && safeSpend<=0.05){
         h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>即便把年开支压到接近 0 仍会出现缺口，说明压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议先看下方「决策对照」逐项关掉比较。</span></div>`;
       }
@@ -1838,7 +1838,8 @@
     if(hasGap && levers.some(l=>l.dEnd>0.5)){
       h+='<div class="vt-levers">'+levers.map((L,i)=>{
         const extra=(L.dFirst&&L.dFirst>0)?`（转负推迟 ${L.dFirst} 年）`:'';
-        return `<div class="vt-lever${i===0?' best':''}"><div class="n">${L.name}${i===0?' · 最有效':''}</div><div class="d">终点余额 ${(L.dEnd>=0?'+':'')}${fmt(L.dEnd)} 万 ${extra}</div></div>`;
+        // fmt() 自带正负号与「万」单位，不要在外面再拼
+        return `<div class="vt-lever${i===0?' best':''}"><div class="n">${L.name}${i===0?' · 最有效':''}</div><div class="d">终点余额 ${fmt(L.dEnd)}${extra?' '+extra:''}</div></div>`;
       }).join('')+'</div>';
       h+='<div class="vt-note">以上为各自单独调整一项的效果（其他条件不变），组合调整不等于简单相加。</div>';
     }
