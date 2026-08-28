@@ -1705,7 +1705,7 @@
   }
   function renderAll(R){
     const ans=R.ans,plan=R.plan,res=R.res,cmp=R.cmp;
-    renderSummary(plan,res,ans); renderKPIs(res,plan); renderTopVerdict(plan,res); renderPrintHead(plan,res); renderChart(res); renderChartTable(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
+    renderSummary(plan,res,ans); renderKPIs(res,plan); renderTopVerdict(plan,res,R); renderPrintHead(plan,res); renderChart(res); renderChartTable(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
     renderSynthesisInit(R.endVal,cmp);
     renderChildFork(R.resChild, R.resNoChild, ans);
     renderHomeFork(plan, res, R.resRent, R.resBuy, ans);
@@ -1817,7 +1817,8 @@
     }
     return best;
   }
-  function renderTopVerdict(plan,res){
+  // R 为 computeAll 的完整结果，用于取决策对照（生娃 / 住房）的岔路差额
+  function renderTopVerdict(plan,res,R){
     const box=$('#vtBody'); if(!box) return;
     const m=res.metrics; const daily=plan.dailyAnnual||0;
     const yTxt=v=> daily>0 ? `≈ ${(Math.abs(v)/daily).toFixed(1)} 年生活开支` : '';
@@ -1865,6 +1866,23 @@
       }else if(safeSpend==null || safeSpend<=0.05){
         // safeSpend 为 null 表示「即便零开支也不够」，同样走降级提示
         h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>光靠压开支补不上——即便压到接近 0 仍有缺口，说明压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议看下方「决策对照」逐项关掉比较。</span></div>`;
+      }
+      // 岔路：把「决策对照」里量级更大的结构性选择提上来（只提能改善的，负向的不占版面）
+      if(R){
+        const forks=[];
+        if(R.resChild && R.resNoChild){
+          const d=+((R.resNoChild.metrics.finalEnd)-(R.resChild.metrics.finalEnd)).toFixed(1);
+          if(d>=0.5) forks.push({n:'不生娃',v:d});
+        }
+        let hv=null,hn='';
+        if(plan.housing==='buy' && R.resRent){ hv=+((R.resRent.metrics.finalEnd)-m.finalEnd).toFixed(1); hn='改租房'; }
+        else if(plan.housing==='rent' && R.resBuy){ hv=+((R.resBuy.metrics.finalEnd)-m.finalEnd).toFixed(1); hn='改购房'; }
+        if(hv!=null && hv>=0.5) forks.push({n:hn,v:hv});
+        if(forks.length){
+          forks.sort((a,b)=>b.v-a.v);
+          const txt=forks.map(f=>`${f.n}多剩 <b>${f.v.toFixed(1)} 万</b>`).join('、');
+          h+=`<div class="vt-line"><span class="vt-k">岔路</span><span>换个活法也许更管用：${txt}（到 ${m.finalAge} 岁的差额，只算现金流，不含房产净值）。</span></div>`;
+        }
       }
       if(fn){
         const yrs=Math.max(0,fn.age-curAge);
