@@ -578,9 +578,79 @@
     .export-bar{background:var(--card)}
     .survey-cta{background:linear-gradient(to top,rgba(30,41,59,.985) 72%,rgba(30,41,59,0))}
   }
+
+  /* ===== 排版 / 结构优化（第 2 轮，2026-08-28）===== */
+  /* #8 跳转链接（a11y）：键盘 / 读屏用户一键直达结果 */
+  .skip-link{position:absolute;left:-9999px;top:8px;z-index:50;background:var(--brand);color:#fff;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none}
+  .skip-link:focus{left:12px}
+
+  /* #1 结果分区可折叠：复用问卷折叠交互（头栏可点击 / 可键盘收起） */
+  .rhead{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;margin:0 0 6px;padding:5px 4px;border-radius:10px;transition:background-color var(--dur) var(--ease)}
+  .rhead:hover{background:var(--soft)}
+  .rhead:active{background:#dde6f1;transition-duration:.08s}
+  .rhead:focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
+  .r-caret{margin-left:auto;width:18px;height:18px;color:var(--brand);flex:0 0 auto;transition:transform var(--dur) var(--ease)}
+  .card.collapsed .r-caret{transform:rotate(-90deg)}
+  .card.collapsed .qg-body{display:none}
+  .card.collapsed{box-shadow:var(--sd1)}
+
+  /* #4 首屏 hero 数字（32px 金字，强调终点） */
+  .vt-hero{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:4px 0 12px;margin-bottom:8px;border-bottom:1px dashed var(--line)}
+  .vt-hero .hn{font-size:32px;font-weight:800;line-height:1.1;color:var(--gold);font-variant-numeric:tabular-nums}
+  .vt-hero .hn.neg{color:var(--neg)} .vt-hero .hn.pos{color:var(--pos)}
+  .vt-hero .hn .u{font-size:15px;font-weight:600;margin-left:3px;color:var(--sub)}
+  .vt-hero .hs{font-size:13px;color:var(--sub)}
+
+  /* #9 重点句引用块（窗口 / 怎么补 左侧色条） */
+  .vt-line.quote{border-left:3px solid var(--brand2);background:var(--soft);padding:8px 12px;margin:7px 0;border-radius:0 9px 9px 0}
+
+  /* #2 决策对照矩阵：把 trio KPI 排成「左路径 | 差额 | 右路径」大数字 */
+  .kpis.cmp{grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;margin:10px 0 4px}
+  .kpis.cmp .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-left:0;border-radius:0;padding:18px 14px;min-width:0}
+  .kpis.cmp .kpi .t{font-size:12px;line-height:1.4}
+  .kpis.cmp .kpi .v{font-size:28px;margin-top:6px}
+  .kpis.cmp .kpi:nth-child(1){border-right:2px dashed var(--line);border-left:4px solid var(--brand)}
+  .kpis.cmp .kpi:nth-child(3){border-left:2px dashed var(--line);border-right:4px solid var(--gold)}
+  .kpis.cmp .kpi:nth-child(2){background:var(--soft);min-width:158px}
+
+  /* #3 逐年表：冻结首列 + 斑马纹 + 当前年龄行高亮 */
+  .tbl th.fy{position:sticky;left:0;z-index:3;background:var(--soft)}
+  .tbl td.fy{position:sticky;left:0;z-index:2;background:var(--card);font-weight:600}
+  .tbl tr:not(.total-row):nth-child(even) td:not(.fy){background:rgba(30,58,95,.035)}
+  .tbl tr.cur td{background:rgba(37,99,235,.10)!important}
+  .tbl tr.cur td.fy{background:rgba(37,99,235,.18)!important;box-shadow:inset 3px 0 0 var(--brand2)}
+  .tbl tr.cur td .cur-tag{font-size:10.5px;color:var(--brand2);font-weight:700;margin-left:6px}
+  .tbl .scroll-hint{font-size:11px;color:var(--sub);margin:2px 0 6px}
+
+  /* #6 投资趋势 hover 读数 */
+  .inv-tip{position:absolute;top:6px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11.5px;padding:3px 8px;border-radius:7px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;font-variant-numeric:tabular-nums;z-index:5}
+  .chartbox{position:relative}
+
+  /* #7 卡片留白统一节奏 */
+  .card{padding:20px 22px}
+  .card h2{margin:0 0 14px}
+
+  /* #5 未填态引导占位卡 */
+  .empty-card{text-align:center;padding:34px 22px}
+  .empty-card .ec-ico{width:46px;height:46px;color:var(--brand);margin:0 auto 12px;display:block}
+  .empty-card h3{margin:0 0 8px;font-size:17px;color:var(--brand)}
+  .empty-card p{color:var(--sub);font-size:13.5px;margin:0 auto 16px;max-width:440px;line-height:1.7}
+  .empty-card .ec-go{display:inline-block;background:var(--brand);color:#fff;border:0;padding:11px 26px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+  .empty-hidden{display:none!important}
+
+  /* 暗色模式：补齐新增类的底色 */
+  @media (prefers-color-scheme: dark){
+    .tbl th.fy{background:#1c2a36}
+    .tbl td.fy{background:var(--card)}
+    .kpis.cmp .kpi:nth-child(2){background:var(--soft)}
+    .vt-line.quote{background:#16222e}
+    .skip-link{background:var(--brand)}
+    .empty-card .ec-go{background:var(--brand)}
+  }
 </style>
 </head>
 <body>
+<a class="skip-link" href="#sec-top">跳到测算结果</a>
 <div class="wrap">
   <header class="top">
     <h1>人生财务 & 岔路决策器</h1>
@@ -897,9 +967,18 @@
       <span class="exp-status" id="expStatus" role="status" aria-live="polite"><span class="dot"></span><span class="txt"></span></span>
     </div>
 
+    <!-- #5 未填态引导占位卡：未测算时点导航进来，给引导而非空白 -->
+    <div class="card empty-card" id="sec-empty" style="display:none">
+      <svg class="ec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+      <h3>还没开始测算</h3>
+      <p>先在上方问卷填好「基本信息 / 收支 / 岔路选择」，再点「开始测算」，这里就会生成你的财务寿命、缺口与人生岔路对照。结果只存在本机浏览器，刷新即丢，建议导出留存。</p>
+      <button class="ec-go" id="ecGo" type="button">去填写问卷</button>
+    </div>
+
     <!-- #2 一屏结论 + #4 行动建议：先看这里，再看细节 -->
     <div class="card verdict-top" id="sec-top">
       <h2 class="flex-head"><span class="step vt-step">★</span>先看这一屏</h2>
+      <div class="vt-hero" id="vtHero"></div>
       <div id="vtBody"></div>
       <!-- #3 调参滑块：不用回问卷改数再重算 -->
       <details class="tune-box" id="tuneBox">
@@ -955,7 +1034,8 @@
         <summary>查看图表数据表（可复制 · 供读屏使用）</summary>
         <div class="dt-body"></div>
       </details>
-      <div class="scroll" style="margin-top:14px"><table class="tbl" id="tbl"></table></div>
+      <div class="scroll-hint">← 左列（年份/年龄）已冻结，横向滚动查看各分项 →</div>
+      <div class="scroll" style="margin-top:6px"><table class="tbl" id="tbl"></table></div>
     </div>
 
     <div class="card" id="sec-gap">
@@ -978,7 +1058,7 @@
       <div class="layer">
         <div class="layer-head"><span class="layer-no">①</span>财务代价：生娃让终点差多少</div>
         <p class="hint">同一套输入下，把「生娃」与「不生娃」互换，看财务终点的差别——这是你人生岔路的量化代价。</p>
-        <div class="kpis" id="childfork-kpis"></div>
+        <div class="kpis cmp" id="childfork-kpis"></div>
         <div class="notebox" id="childfork-note"></div>
       </div>
     </div>
@@ -986,7 +1066,7 @@
     <div class="card" id="homefork" style="display:none">
       <h2><span class="step">B</span>买房与否 · 决策对照</h2>
       <p class="hint">同一套输入下，把「购房」与「一直租房」互换，看财务终点的差别——这是你住房岔路的量化代价（模型不含房产净值，纯看现金流）。</p>
-      <div class="kpis" id="homefork-kpis"></div>
+      <div class="kpis cmp" id="homefork-kpis"></div>
       <div class="notebox" id="homefork-note"></div>
     </div>
 
@@ -1781,14 +1861,20 @@
     renderAssump(plan,ans);
     renderRisk(ans, plan, res);
     setupResultNav();
+    setupResultCollapse();
   }
   function run(){
     $('#err').textContent=''; $('#err').classList.remove('show');
     let R;
     try{ R=computeAll(); }
     catch(e){ const er=$('#err'); er.textContent=(e.isDateError?'⚠ 请填写有效的出生日期':'⚠ 计算出错：'+e.message); er.classList.add('show'); return; }
+    window.__curAge=R.plan.currentAge;
     renderAll(R);
-    $('#survey').style.display='none'; $('#results').style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
+    $('#survey').style.display='none'; $('#results').style.display='block';
+    // #5 关闭未填态占位卡，恢复各结果卡片
+    const empty=$('#sec-empty'); if(empty) empty.style.display='none';
+    Array.from($('#results').querySelectorAll('.card')).forEach(c=>{ c.classList.remove('empty-hidden'); });
+    window.scrollTo({top:0,behavior:'smooth'});
     syncTuners(R.plan);
   }
   let __navBound=false;
@@ -1811,8 +1897,45 @@
       window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(spy); } },{passive:true});
       window.addEventListener('scroll',tog,{passive:true});
       if(toTop) toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+      // #1 导航点击：展开目标分区（折叠态也能直达）；#5 未测算则给引导
+      links.forEach(a=>{
+        a.addEventListener('click', e=>{
+          e.preventDefault();
+          if($('#results').style.display==='none' || !$('#vtBody') || $('#vtBody').textContent.trim()===''){ showEmptyState(); return; }
+          const t=document.querySelector(a.getAttribute('href'));
+          if(t){ t.classList.remove('collapsed'); const h=t.querySelector('h2'); if(h) h.setAttribute('aria-expanded','true'); if(t.scrollIntoView) t.scrollIntoView({behavior:'smooth',block:'start'}); }
+        });
+      });
     }
     spy(); tog();
+  }
+  // #1 结果分区可折叠：复用问卷折叠交互（首次渲染时把内容收进 .qg-body）
+  let __resultCollapsed=false;
+  function setupResultCollapse(){
+    const results=$('#results'); if(!results) return;
+    if(__resultCollapsed) return; __resultCollapsed=true;
+    const keepOpen=new Set(['sec-top','sec-core','sec-empty']);
+    Array.from(results.querySelectorAll('.card')).forEach(el=>{
+      const head=el.querySelector('h2'); if(!head || head.classList.contains('rhead')) return;
+      head.classList.add('rhead');
+      head.setAttribute('role','button'); head.setAttribute('tabindex','0'); head.setAttribute('aria-expanded','true');
+      head.insertAdjacentHTML('beforeend','<svg class="r-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>');
+      const body=document.createElement('div'); body.className='qg-body';
+      let n=head.nextSibling; while(n){ const nx=n.nextSibling; body.appendChild(n); n=nx; }
+      el.appendChild(body);
+      const toggle=()=>{ const c=el.classList.toggle('collapsed'); head.setAttribute('aria-expanded', c?'false':'true'); };
+      head.addEventListener('click',toggle);
+      head.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); toggle(); } });
+      if(!keepOpen.has(el.id)) el.classList.add('collapsed');
+    });
+  }
+  // #5 未填态引导占位卡
+  function showEmptyState(){
+    const r=$('#results'); if(r) r.style.display='block';
+    const empty=$('#sec-empty'); if(empty) empty.style.display='block';
+    // 用 class 隐藏，避免覆盖 renderHomeFork 对 #homefork 的 inline display 管理
+    Array.from(r.querySelectorAll('.card')).forEach(c=>{ if(c.id!=='sec-empty') c.classList.add('empty-hidden'); });
+    window.scrollTo({top:0,behavior:'smooth'});
   }
 
   function renderSummary(plan,res,ans){ $('#summary-line').textContent=`当前 ${plan.currentAge} 岁、起点本金约 ${plan.startBalance} 万、测算区间 ${res.rows[0].age}–${res.metrics.finalAge} 岁、年化 ${Math.round(plan.returnRate*1000)/10}%。`; }
@@ -1926,14 +2049,14 @@
         parts.push(`起点本金再备 <b>${balShown} 万</b>`);
       }
       if(parts.length){
-        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，任选其一：${parts.join('；或')}。</span></div>`;
+        h+=`<div class="vt-line quote"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，任选其一：${parts.join('；或')}。</span></div>`;
         // 压开支这条路走不通时，主动说明为什么没给开支线
         if(safeSpend==null || safeSpend<=0.05){
           h+=`<div class="vt-line"><span class="vt-k">提示</span><span>压开支这条路走不通——即便压到接近 0 仍不够，压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议看下方「决策对照」逐项关掉比较。</span></div>`;
         }
       }else if(safeSpend==null || safeSpend<=0.05){
         // safeSpend 为 null 表示「即便零开支也不够」，同样走降级提示
-        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>光靠压开支补不上——即便压到接近 0 仍有缺口，说明压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议看下方「决策对照」逐项关掉比较。</span></div>`;
+        h+=`<div class="vt-line quote"><span class="vt-k">怎么补</span><span>光靠压开支补不上——即便压到接近 0 仍有缺口，说明压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议看下方「决策对照」逐项关掉比较。</span></div>`;
       }
       // 岔路：把「决策对照」里量级更大的结构性选择提上来（只提能改善的，负向的不占版面）
       if(R){
@@ -1955,7 +2078,7 @@
       if(fn){
         const yrs=Math.max(0,fn.age-curAge);
         const tip = yrs===0 ? '今年就会花完，需要立刻处理' : (yrs<5 ? '窗口偏紧，建议尽快动手' : `${fn.age} 岁前动手都还来得及`);
-        h+=`<div class="vt-line"><span class="vt-k">窗口</span><span>你今年 ${curAge} 岁，还有 <b>${yrs} 年</b>可以调整——${tip}。</span></div>`;
+        h+=`<div class="vt-line quote"><span class="vt-k">窗口</span><span>你今年 ${curAge} 岁，还有 <b>${yrs} 年</b>可以调整——${tip}。</span></div>`;
       }
     }
     const levers=[];
@@ -1976,6 +2099,16 @@
         return `<div class="vt-lever${i===0?' best':''}"><div class="n">${L.name}${i===0?' · 最有效':''}</div><div class="d">到 ${m.finalAge} 岁${d}${extra?'（'+extra+'）':''}</div></div>`;
       }).join('')+'</div>';
       h+='<div class="vt-note">以上为各自单独调整一项的效果（其他条件不变），组合调整不等于简单相加。</div>';
+    }
+    // #4 首屏 hero 数字（独立于 #vtBody，便于视觉强化且不破坏结论文案契约）
+    const hero=$('#vtHero');
+    if(hero){
+      if(!hasGap){
+        hero.innerHTML=`<div class="hn">余 <span class="u">${m.finalEnd.toFixed(1)} 万</span></div><div class="hs">够花到 <b>${m.finalAge}</b> 岁 · 全程为正</div>`;
+      }else{
+        const fn=m.firstNegative;
+        hero.innerHTML=`<div class="hn ${fn?'neg':'pos'}">${fn?fn.age+' 岁':'见底'}<span class="u">${fn?'把钱花完':''}</span></div><div class="hs">${fn?('到 '+m.finalAge+' 岁还差 <b>'+Math.abs(m.gapAtTarget).toFixed(1)+'</b> 万'):'收入覆盖不了支出'}</div>`;
+      }
     }
     box.innerHTML=h;
   }
@@ -2016,8 +2149,9 @@
     </tr>`;
     const body=res.rows.map(r=>{
       const ec=r.end<0?'negcell':'poscell';
-      return `<tr>
-        <td class="fy">${r.year}/${r.age}</td>
+      const isCur=(window.__curAge!=null && r.age===window.__curAge);
+      return `<tr class="${isCur?'cur':''}">
+        <td class="fy">${r.year}/${r.age}${isCur?'<span class="cur-tag">你在这</span>':''}</td>
         <td class="td-bal">${r.b0.toFixed(2)}</td>
         <td class="td-inc">${inc(r.ret)}</td>
         <td class="td-inc">${inc(r.wage||0)}</td>
@@ -2251,6 +2385,28 @@
     const peak=(peakI===0&&vals[0]===0)?'':`<circle cx="${X(peakI).toFixed(1)}" cy="${Y(vals[peakI]).toFixed(1)}" r="3.6" fill="var(--pass)" stroke="#fff" stroke-width="1.5"/>`;
     return `<svg class="inv-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="被动收入趋势折线图">${grid}<path class="area" d="${area}"/>${peak}<polyline class="line" points="${pts}"/>${xlab}</svg>`;
   }
+  // #6 投资趋势 SVG hover 读数：跟随鼠标显示「年份 / 被动收入」
+  function attachTrendHover(box, vals, years){
+    if(!box) return;
+    const svg=box.querySelector('svg'); if(!svg) return;
+    let tip=box.querySelector('.inv-tip');
+    if(!tip){ tip=document.createElement('div'); tip.className='inv-tip'; box.appendChild(tip); }
+    const W=680, padL=12, padR=12, n=vals.length; if(n<2) return;
+    const toIdx=clientX=>{
+      const r=svg.getBoundingClientRect();
+      const xvb=(clientX-r.left)/r.width*W;
+      const frac=(xvb-padL)/(W-padL-padR);
+      return Math.max(0, Math.min(n-1, Math.round(frac*(n-1))));
+    };
+    const xPct=i=> (padL + (W-padL-padR)*i/(n-1))/W*100;
+    svg.addEventListener('mousemove', e=>{
+      const i=toIdx(e.clientX);
+      tip.innerHTML=`<b>${years[i]}</b> · 被动收入 ${vals[i].toFixed(1)} 万`;
+      tip.style.left=xPct(i)+'%';
+      tip.style.opacity='1';
+    });
+    svg.addEventListener('mouseleave', ()=>{ tip.style.opacity='0'; });
+  }
   function buildDonut(dist, total){
     if(!total || total<=0 || !dist.length) return '<div class="dist-empty">暂无被动收入来源（请在问卷「投资和被动收入」中填写收益金额）。</div>';
     const r=46,cx=60,cy=60,C=2*Math.PI*r;
@@ -2278,6 +2434,7 @@
       ['投入产出比', ratio==null?'—':(ratio.toFixed(2)+'×'), (ratio!=null&&ratio>=1)?'pos':'warn'],
     ].map(k=>`<div class="kpi"><div class="t">${k[0]}</div><div class="v ${k[2]}">${k[1]}</div></div>`).join('');
     $('#invTrend').innerHTML = buildTrendChart(passVals, res.rows.map(r=>r.year));
+    attachTrendHover($('#invTrend'), passVals, res.rows.map(r=>r.year));
     let peakI=0; for(let i=1;i<passVals.length;i++){ if(passVals[i]>passVals[peakI]) peakI=i; }
     $('#invPeak').textContent = (passVals[peakI]>0)? ('峰值 '+passVals[peakI].toFixed(1)+' 万 @ '+res.rows[peakI].year) : '—';
     $('#invDist').innerHTML = buildDonut(dist, cumPass);
@@ -2336,6 +2493,8 @@
   }
 
   $('#run').addEventListener('click',run);
+  // #5 未填态占位卡：去填写问卷 → 回到问卷
+  const ecGo=$('#ecGo'); if(ecGo) ecGo.addEventListener('click',()=>{ const r=$('#results'); if(r) r.style.display='none'; const s=$('#survey'); if(s) s.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
   setupValidation();
   setupTuners();
   $('#back').addEventListener('click',()=>{ $('#results').style.display='none'; $('#survey').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
@@ -2533,6 +2692,12 @@
         onclone:function(doc){
           // #10：长图同样带上页眉（标题 + 日期 + 关键假设）
           const ph=doc.getElementById('printHead'); if(ph) ph.style.display='block';
+          // 展开所有折叠的结果分区，长图里不留「收起」空白
+          doc.querySelectorAll('#results .card.collapsed').forEach(c=>{ c.classList.remove('collapsed'); const h=c.querySelector('h2'); if(h) h.setAttribute('aria-expanded','true'); });
+          // 长图隐藏快速导航 / 导出工具条 / 顶部进度条
+          const nav=doc.getElementById('resultnav'); if(nav) nav.style.display='none';
+          const eb=doc.querySelector('.export-bar'); if(eb) eb.style.display='none';
+          const hp=doc.querySelector('.head-progress'); if(hp) hp.style.display='none';
           // 展开横向滚动容器，避免长表格被截断
           doc.querySelectorAll('.scroll,.stage-tbl').forEach(n=>{ n.style.overflow='visible'; n.style.maxHeight='none'; n.style.whiteSpace='normal'; });
           doc.querySelectorAll('table').forEach(t=>{ t.style.width='auto'; });
