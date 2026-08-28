@@ -319,6 +319,23 @@
     .inv-summary{grid-template-columns:1fr}
     .qg-title{font-size:14px}
   }
+
+  /* ===== 导出结果工具条 ===== */
+  .export-bar{display:flex;align-items:center;gap:10px;margin:14px 0 4px;flex-wrap:wrap;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;background:var(--soft)}
+  .export-bar .exp-label{font-size:13px;font-weight:600;color:var(--ink)}
+  .export-bar .exp-hint{font-size:12px;color:var(--sub);margin-left:auto}
+  @media(max-width:640px){.export-bar .exp-hint{margin-left:0;flex-basis:100%}}
+
+  /* ===== 打印（导出 PDF）样式：只打印结果区 ===== */
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    header.top,#survey,.resultnav,.export-bar,.survey-cta{display:none!important}
+    #results{display:block!important}
+    .card{box-shadow:none;border:1px solid #e4e7eb;page-break-inside:avoid;break-inside:avoid}
+    .card h2{background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .kpi,.risk-cell,.diag-box,.notebox,.total-row{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
 </style>
 </head>
 <body>
@@ -602,6 +619,13 @@
       <a href="#sec-synth" data-sec>综合结论</a>
       <a href="#sec-risk" data-sec>风险保障</a>
     </nav>
+
+    <div class="export-bar">
+      <span class="exp-label">导出结果</span>
+      <button class="btn sm" id="btnPrint" type="button">打印 / 存 PDF</button>
+      <button class="btn sm" id="btnImage" type="button">导出长图 PNG</button>
+      <span class="exp-hint">结果只存在本机浏览器，刷新即丢，建议导出留存</span>
+    </div>
 
     <div class="card" id="sec-core">
       <h2 class="flex-head"><span class="step">A</span>核心指标<span id="kpisTag" class="sect-tag"></span></h2>
@@ -1740,6 +1764,39 @@
 
   $('#run').addEventListener('click',run);
   $('#back').addEventListener('click',()=>{ $('#results').style.display='none'; $('#survey').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
+
+  // ---- 导出：打印 / 存 PDF ----
+  $('#btnPrint').addEventListener('click',()=>{ window.print(); });
+  // ---- 导出：长图 PNG（懒加载 html2canvas）----
+  $('#btnImage').addEventListener('click',()=>{
+    const btn=$('#btnImage');
+    const loadHtml2canvas = () => new Promise((res,rej)=>{
+      if(window.html2canvas) return res();
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload=res; s.onerror=()=>rej(new Error('html2canvas 加载失败'));
+      document.head.appendChild(s);
+    });
+    btn.disabled=true; btn.textContent='生成中…';
+    loadHtml2canvas().then(()=>{
+      const el=$('#results');
+      return window.html2canvas(el,{
+        scale:2, backgroundColor:'#ffffff', useCORS:true,
+        windowWidth:document.documentElement.scrollWidth,
+        onclone:function(doc){
+          // 展开横向滚动容器，避免长表格被截断
+          doc.querySelectorAll('.scroll,.stage-tbl').forEach(n=>{ n.style.overflow='visible'; n.style.maxHeight='none'; n.style.whiteSpace='normal'; });
+          doc.querySelectorAll('table').forEach(t=>{ t.style.width='auto'; });
+        }
+      });
+    }).then(canvas=>{
+      const a=document.createElement('a');
+      a.download='人生财务测算结果.png';
+      a.href=canvas.toDataURL('image/png');
+      a.click();
+    }).catch(e=>{ alert('导出失败：'+e.message); })
+    .finally(()=>{ btn.disabled=false; btn.textContent='导出长图 PNG'; });
+  });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
