@@ -450,8 +450,31 @@
   .q .label small{font-weight:400;color:var(--sub);font-size:12px;display:block;margin:5px 0 0;line-height:1.6}
   .surveynav .sn-chip svg{width:14px;height:14px;flex:0 0 auto}
 
+  /* ===== #6 首屏说明条：耗时 / 隐私 / 自动保存 ===== */
+  .intro-bar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 2px}
+  .ib-item{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);background:var(--soft);border:1px solid var(--line);padding:5px 11px;border-radius:16px}
+  .ib-item svg{width:14px;height:14px;color:var(--brand);flex:0 0 auto}
+  .ib-item.ib-ok{background:#eaf7ef;border-color:#bfe3cc;color:#1b7f3b}
+  .ib-item.ib-ok svg{color:#1b7f3b}
+  /* #1 草稿恢复提示条 */
+  .draft-bar{display:none;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0 2px;padding:9px 12px;border:1px solid #bfe3cc;background:#eaf7ef;border-radius:10px;font-size:12.5px;color:#1b7f3b}
+  .draft-bar.show{display:flex}
+  .draft-bar svg{width:15px;height:15px;flex:0 0 auto}
+  .draft-bar .txt{flex:1;min-width:0;line-height:1.5}
+  /* #5 KPI 数字解释 */
+  .kpi .s{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.45}
+  /* #9 输入校验：温和提示，不阻断 */
+  .field-warn{display:none;font-size:12px;color:#a8730f;background:#fff8ec;border:1px solid #f0dcb4;border-radius:7px;padding:5px 9px;margin-top:5px;line-height:1.5}
+  .field-warn.show{display:block}
+  input.invalid,select.invalid{border-color:#e0a83e;box-shadow:0 0 0 3px rgba(224,168,62,.15)}
+  /* #10 导出页眉：仅打印/导出时可见 */
+  .print-head{display:none}
+
   /* ===== 打印（导出 PDF）样式：只打印结果区 ===== */
   @media print{
+    .print-head{display:block;margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid var(--brand)}
+    .print-head h1{font-size:17px;margin:0 0 5px;color:#1f2933}
+    .print-head .ph-meta{font-size:11px;color:#52606d;line-height:1.6}
     body{background:#fff}
     .wrap{max-width:none;padding:0}
     header.top,#survey,.resultnav,.export-bar,.survey-cta{display:none!important}
@@ -473,6 +496,16 @@
   <div class="card" id="survey">
     <h2><span class="step">A</span>填写你的财务画像</h2>
     <p class="hint">所有金额单位：万元人民币（除非特别标注）。看不懂的选项保持默认即可。</p>
+    <div class="intro-bar">
+      <span class="ib-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>约 3 分钟填完</span>
+      <span class="ib-item ib-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>数据只在本机浏览器，不上传</span>
+      <span class="ib-item" id="ibDraft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>自动保存草稿</span>
+    </div>
+    <div class="draft-bar" id="draftBar" role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-9 9z"/><polyline points="3 12 8 12 8 7"/></svg>
+      <span class="txt"></span>
+      <button class="btn sm ghost" id="btnClearDraft" type="button">清空重填</button>
+    </div>
 
     <nav class="surveynav" id="surveynav" aria-label="问卷分区与填写进度">
       <div class="sn-chips"></div>
@@ -731,6 +764,11 @@
 
   <!-- ====== 结果区 ====== -->
   <div id="results" style="display:none">
+    <div class="print-head" id="printHead">
+      <h1>人生财务寿命与缺口分析 · 测算结果</h1>
+      <div class="ph-meta" id="printMeta"></div>
+    </div>
+
     <nav class="resultnav" id="resultnav" aria-label="结果快速导航">
       <span class="rn-label">快速跳转</span>
       <a href="#sec-core" data-sec>核心指标</a>
@@ -1574,7 +1612,7 @@
     const planBuy = Object.assign({}, plan, { housing:'buy' });
     const resBuy = FPEngine.project(planBuy);
 
-    renderSummary(plan,res,ans); renderKPIs(res); renderChart(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
+    renderSummary(plan,res,ans); renderKPIs(res,plan); renderPrintHead(plan,res); renderChart(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
     renderSynthesisInit(endVal,cmp);
     renderChildFork(resChild, resNoChild, ans);
     renderHomeFork(plan, res, resRent, resBuy, ans);
@@ -1603,16 +1641,21 @@
   }
 
   function renderSummary(plan,res,ans){ $('#summary-line').textContent=`当前 ${plan.currentAge} 岁、起点本金约 ${plan.startBalance} 万、测算区间 ${res.rows[0].age}–${res.metrics.finalAge} 岁、年化 ${Math.round(plan.returnRate*1000)/10}%。`; }
-  function renderKPIs(res){
+  // #5：给 KPI 数字补上下文——绝对值看不出严重程度，换算成「多少年生活开支」才有体感
+  function renderKPIs(res,plan){
     const m=res.metrics; const tag=m.allPositive?'<span class="tag safe"><i class="check">✓</i>全程为正</span>':'<span class="tag risk"><i class="bang">!</i>中途见底</span>';
     $('#kpisTag').innerHTML=tag;
+    const daily=(plan&&plan.dailyAnnual)||0;
+    const yr=v=> daily>0 ? (Math.abs(v)/daily).toFixed(1) : null;
+    const asYears=v=>{ const n=yr(v); return n? `≈ ${n} 年生活开支` : '（未填生活开支，无法换算）'; };
+    const untilNow=age=>{ const cur=res.rows[0].age; const d=age-cur; return d>0? `距今 ${d} 年` : (d===0?'就在今年':'已过去'); };
     const items=[
-      {t:'目标年龄终点余额',v:fmt(m.finalEnd),c:cls(m.finalEnd)},
-      {t:'资金首次转负',v:m.firstNegative?(m.firstNegative.age+' 岁'):'—',c:m.firstNegative?'neg':'pos'},
-      {t:'窗口最低点',v:m.worst.value===Infinity?'—':fmt(m.worst.value),c:m.worst.value<0?'neg':'pos'},
-      {t:'目标年龄缺口',v:m.gapAtTarget>0?fmt(-m.gapAtTarget):'无（盈余）',c:m.gapAtTarget>0?'neg':'pos'},
+      {t:'目标年龄终点余额',v:fmt(m.finalEnd),c:cls(m.finalEnd),s: m.finalEnd<0? '到目标年龄仍为负，需提前安排': '终点仍为正'},
+      {t:'资金首次转负',v:m.firstNegative?(m.firstNegative.age+' 岁'):'—',c:m.firstNegative?'neg':'pos',s: m.firstNegative? untilNow(m.firstNegative.age) : '全程未转负'},
+      {t:'窗口最低点',v:m.worst.value===Infinity?'—':fmt(m.worst.value),c:m.worst.value<0?'neg':'pos',s: m.worst.value===Infinity?'—':((m.worst.value<0? '缺口 ':'盈余 ')+asYears(m.worst.value))},
+      {t:'目标年龄缺口',v:m.gapAtTarget>0?fmt(-m.gapAtTarget):'无（盈余）',c:m.gapAtTarget>0?'neg':'pos',s: m.gapAtTarget>0? asYears(m.gapAtTarget) : '无需补缺口'},
     ];
-    $('#kpis').innerHTML=items.map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div></div>`).join('');
+    $('#kpis').innerHTML=items.map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div>${i.s?`<div class="s">${i.s}</div>`:''}</div>`).join('');
   }
   function renderChart(res){
     const ctx=$('#chart'); const labels=res.rows.map(r=>r.age+'岁'); const data=res.rows.map(r=>r.end);
@@ -1964,7 +2007,155 @@
   }
 
   $('#run').addEventListener('click',run);
+  setupValidation();
   $('#back').addEventListener('click',()=>{ $('#results').style.display='none'; $('#survey').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
+
+  // ---- #9 输入校验：温和提示范围异常，不阻断提交 ----
+  function setupValidation(){
+    const RULES=[
+      {sel:'#assets',min:0,max:1000000,msg:'可投资资产应 ≥ 0'},
+      {sel:'#dailyTotal',min:0,max:5000,msg:'年生活开支应 ≥ 0'},
+      {sel:'#retCustom',min:0,max:30,msg:'年化收益率一般在 0% – 30% 之间'},
+      {sel:'#buyTotal',min:0,max:100000,msg:'购房总价应 ≥ 0'},
+      {sel:'#downPayment',min:0,max:100000,msg:'首付应 ≥ 0'},
+      {sel:'#rentMonthly',min:0,max:1000,msg:'月租金应 ≥ 0'}
+    ];
+    RULES.forEach(r=>{
+      const el=$(r.sel); if(!el) return;
+      const warn=document.createElement('div'); warn.className='field-warn';
+      el.insertAdjacentElement('afterend',warn);
+      const check=()=>{
+        if(el.value===''){ warn.classList.remove('show'); el.classList.remove('invalid'); return; }
+        const v=parseFloat(el.value);
+        const bad=!isNaN(v) && ((r.min!==undefined&&v<r.min)||(r.max!==undefined&&v>r.max));
+        warn.classList.toggle('show',bad);
+        el.classList.toggle('invalid',bad);
+        if(bad) warn.textContent=r.msg+'（当前 '+el.value+'）';
+      };
+      el.addEventListener('blur',check);
+      el.addEventListener('input',check);
+    });
+  }
+
+  // ---- #10 导出页眉：标题 + 生成日期 + 关键假设 ----
+  function renderPrintHead(plan,res){
+    const el=$('#printMeta'); if(!el) return;
+    const d=new Date();
+    el.textContent=[
+      '生成日期：'+d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日',
+      '当前 '+plan.currentAge+' 岁，测算至 '+res.metrics.finalAge+' 岁',
+      '年化 '+(Math.round(plan.returnRate*1000)/10)+'%',
+      '年生活开支 '+plan.dailyAnnual+' 万'
+    ].join('　｜　');
+  }
+
+  /* ==========================================================
+     #1 草稿持久化 —— 数据只写本机 localStorage，不上传
+     覆盖：所有具名控件 + 单选组 + 四个动态列表的行数与行内值 + 风险勾选
+     ========================================================== */
+  const DRAFT_KEY='lffp.draft.v1';
+  const DRAFT_LISTS=[{box:'itemList',add:'addItem'},{box:'childList',add:'addChild'},{box:'parentList',add:'addParent'},{box:'lumpList',add:'addLump'}];
+  function draftRowSnap(row){
+    const o={};
+    row.querySelectorAll('input,select').forEach((el,i)=>{
+      const cls=(el.className||'').split(' ')[0]||('f'+i);
+      const k=cls+((el.dataset&&el.dataset.key)?'['+el.dataset.key+']':'');
+      o[k]= el.type==='checkbox' ? !!el.checked : el.value;
+    });
+    return o;
+  }
+  function draftRowFill(row,data){
+    if(!data) return;
+    row.querySelectorAll('input,select').forEach((el,i)=>{
+      const cls=(el.className||'').split(' ')[0]||('f'+i);
+      const k=cls+((el.dataset&&el.dataset.key)?'['+el.dataset.key+']':'');
+      if(!(k in data)) return;
+      if(el.type==='checkbox') el.checked=!!data[k]; else el.value=data[k];
+    });
+  }
+  function draftSave(){
+    try{
+      const s={t:Date.now(),v:{},r:{},rows:{},risk:[]};
+      $$('#survey input,#survey select,#survey textarea').forEach(el=>{
+        if(el.type==='radio'){ if(el.checked) s.r[el.name]=el.value; }
+        else if(el.id){ s.v[el.id]= el.type==='checkbox' ? !!el.checked : el.value; }
+      });
+      DRAFT_LISTS.forEach(L=>{
+        const box=document.getElementById(L.box); if(!box) return;
+        s.rows[L.box]=Array.from(box.children).map(draftRowSnap);
+      });
+      $$('#riskList input:checked').forEach(cb=>{
+        const card=cb.closest('.risk-card');
+        if(card && cb.dataset && cb.dataset.ins) s.risk.push(card.dataset.member+'|'+cb.dataset.ins);
+      });
+      localStorage.setItem(DRAFT_KEY,JSON.stringify(s));
+    }catch(e){ /* 隐私模式下 localStorage 可能不可用，静默忽略 */ }
+  }
+  function draftRestore(){
+    let s=null;
+    try{ s=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null'); }catch(e){ return null; }
+    if(!s) return null;
+    try{
+      // 1) 单选组先恢复：它们决定条件区块与动态成员的显隐
+      Object.keys(s.r||{}).forEach(n=>{
+        $$('#survey input[name="'+n+'"]').forEach(el=>{
+          if(el.value===s.r[n] && !el.checked){ el.checked=true; el.dispatchEvent(new Event('change',{bubbles:true})); }
+        });
+      });
+      // 2) 具名控件
+      Object.keys(s.v||{}).forEach(id=>{
+        const el=document.getElementById(id); if(!el) return;
+        if(el.type==='checkbox') el.checked=!!s.v[id]; else el.value=s.v[id];
+      });
+      // 3) 动态列表：先对齐行数，再按行填值
+      DRAFT_LISTS.forEach(L=>{
+        const box=document.getElementById(L.box); const want=(s.rows||{})[L.box];
+        if(!box || !Array.isArray(want)) return;
+        let guard=0;
+        while(box.children.length<want.length && guard++<50){ const b=document.getElementById(L.add); if(!b) break; b.click(); }
+        while(box.children.length>want.length && box.lastElementChild){ box.lastElementChild.remove(); }
+        Array.from(box.children).forEach((row,i)=>draftRowFill(row,want[i]));
+      });
+      // 4) 风险勾选
+      const sel=new Set(s.risk||[]);
+      if(sel.size){
+        $$('#riskList .risk-card').forEach(card=>{
+          card.querySelectorAll('input[data-ins]').forEach(cb=>{
+            cb.checked=sel.has(card.dataset.member+'|'+cb.dataset.ins);
+          });
+        });
+      }
+      const sv=document.getElementById('survey');
+      if(sv) sv.dispatchEvent(new Event('change',{bubbles:true}));
+      return s.t||Date.now();
+    }catch(e){ return null; }
+  }
+  function draftAgo(t){
+    const d=Date.now()-t;
+    if(d<60000) return '刚刚';
+    if(d<3600000) return Math.floor(d/60000)+' 分钟前';
+    if(d<86400000) return Math.floor(d/3600000)+' 小时前';
+    return Math.floor(d/86400000)+' 天前';
+  }
+  function setupDraft(){
+    const t=draftRestore();
+    const bar=$('#draftBar');
+    if(t && bar){
+      bar.querySelector('.txt').textContent='已恢复你上次（'+draftAgo(t)+'）的填写内容，可继续修改。';
+      bar.classList.add('show');
+      const btn=$('#btnClearDraft');
+      if(btn) btn.addEventListener('click',()=>{
+        try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+        location.reload();
+      });
+    }
+    const sv=document.getElementById('survey');
+    if(!sv) return;
+    let timer=null;
+    const later=()=>{ clearTimeout(timer); timer=setTimeout(draftSave,600); };
+    sv.addEventListener('input',later);
+    sv.addEventListener('change',later);
+  }
 
   // ---- 导出反馈：内联状态条（替代 alert，支持读屏播报）----
   const expStatus=$('#expStatus');
@@ -2003,10 +2194,15 @@
     setExpStatus('busy','首次导出需联网加载截图组件，请稍候…');
     loadHtml2canvas().then(()=>{
       setExpStatus('busy','正在拼接长图，表格较多时约需数秒…');
+      // #8：清晰度按页面高度自适应，超长页面降档，避免手机端内存溢出
+      const H=$('#results').scrollHeight||0;
+      const scale = H>9000 ? 1 : (H>5000 ? 1.4 : 2);
       return window.html2canvas($('#results'),{
-        scale:2, backgroundColor:'#ffffff', useCORS:true,
+        scale, backgroundColor:'#ffffff', useCORS:true,
         windowWidth:document.documentElement.scrollWidth,
         onclone:function(doc){
+          // #10：长图同样带上页眉（标题 + 日期 + 关键假设）
+          const ph=doc.getElementById('printHead'); if(ph) ph.style.display='block';
           // 展开横向滚动容器，避免长表格被截断
           doc.querySelectorAll('.scroll,.stage-tbl').forEach(n=>{ n.style.overflow='visible'; n.style.maxHeight='none'; n.style.whiteSpace='normal'; });
           doc.querySelectorAll('table').forEach(t=>{ t.style.width='auto'; });
@@ -2022,8 +2218,12 @@
       setExpStatus('err','导出失败：'+e.message+'。请检查网络后重试，或改用「打印 / 存 PDF」。');
     }).finally(()=>{ btnImage.disabled=false; btnImage.innerHTML=imageHTML; });
   });
+
+  setupDraft();
   }
 
+  // 注意：setupDraft 必须放在 init 末尾调用——它引用的 DRAFT_KEY 是 const，
+  // 存在暂时性死区，调用点若早于常量初始化会抛 ReferenceError 并被 try/catch 静默吞掉
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
