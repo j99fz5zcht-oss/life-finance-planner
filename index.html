@@ -11,6 +11,13 @@
     --bg:#f5f7fa; --card:#ffffff; --ink:#1f2933; --sub:#52606d; --line:#e4e7eb;
     --brand:#2f6f8f; --brand2:#3b8ea5; --pos:#1f9d55; --neg:#d64545; --warn:#e09f3e;
     --soft:#eef4f7; --a:#3b82c4; --b:#d98456; --inv:#3b82c4; --pass:#1f9d55;
+    /* 交互 token：全站可点击元素统一时长/缓动/位移/阴影/焦点环 */
+    --dur:.2s; --ease:cubic-bezier(.4,0,.2,1);
+    --lift:translateY(-1px); --press:translateY(1px);
+    --sd1:0 2px 6px rgba(47,111,143,.14);      /* 悬停：轻 */
+    --sd2:0 6px 16px rgba(47,111,143,.24);     /* 悬停：主按钮 */
+    --sd3:0 3px 10px rgba(47,111,143,.28);     /* 选中态 */
+    --ring:0 0 0 3px rgba(59,142,165,.18);     /* 聚焦环 */
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6}
@@ -351,16 +358,57 @@
   .exp-status.busy{background:var(--soft);color:var(--sub);border:1px solid var(--line)}
   .exp-status .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:currentColor}
 
-  /* 结果导航：hover 上浮 + active 更明确 */
-  .resultnav a{transition:color .2s ease,background-color .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease}
-  .resultnav a:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(47,111,143,.14)}
-  .resultnav a.active{box-shadow:0 3px 10px rgba(47,111,143,.28);font-weight:600}
+  /* ==========================================================
+     全站统一交互规范 —— 所有可点击元素共用一套位移/时长/阴影
+     规则：hover 上浮 + 阴影加深；active 下压；focus-visible 焦点环；
+          触控目标 ≥34px；只动 transform / box-shadow / 颜色
+     ========================================================== */
 
-  /* 尊重系统「减弱动效」设置 */
+  /* 1) 问卷选项（单选胶囊） */
+  .opt span{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 15px;border-radius:20px;transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .opt span:hover{border-color:var(--brand2);color:var(--brand);transform:var(--lift);box-shadow:var(--sd1)}
+  .opt span:active{transform:var(--press);box-shadow:none;transition-duration:.08s}
+  .opt input:checked + span{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;box-shadow:var(--sd3)}
+  .opt input:checked + span:hover{color:#fff;box-shadow:0 5px 14px rgba(47,111,143,.34)}
+  /* 无障碍：原生 input 被 opacity:0 隐藏，焦点必须转移到可见的胶囊上，否则键盘用户看不到焦点 */
+  .opt input:focus-visible + span{outline:2px solid var(--brand2);outline-offset:2px;box-shadow:var(--ring)}
+
+  /* 2) 导航胶囊：结果导航与问卷分区导航完全对齐 */
+  .resultnav a,.surveynav .sn-chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:6px 13px;border-radius:18px;transition:color var(--dur) var(--ease),background-color var(--dur) var(--ease),border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .resultnav a:hover,.surveynav .sn-chip:hover{color:var(--brand);border-color:var(--brand2);background:#fff;transform:var(--lift);box-shadow:var(--sd1)}
+  .resultnav a:active,.surveynav .sn-chip:active{transform:var(--press);box-shadow:none;transition-duration:.08s}
+  .resultnav a.active,.surveynav .sn-chip.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600;box-shadow:var(--sd3)}
+  .resultnav a.active:hover,.surveynav .sn-chip.active:hover{color:#fff;transform:none;background:var(--brand)}
+  .surveynav .sn-chip.done:not(.active){border-color:#9ed3b6}
+
+  /* 3) 风险保障勾选：撑开触控区 + 悬停底色 */
+  .risk-opts .chk{padding:6px 10px;margin:-6px -10px;border-radius:8px;transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+  .risk-opts .chk:hover{background:var(--soft);color:var(--brand)}
+  .risk-opts .chk input{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+  .risk-opts .chk:has(input:focus-visible){outline:2px solid var(--brand2);outline-offset:2px}
+
+  /* 4) 表单控件：统一悬停描边与聚焦环（替掉散落的局部规则） */
+  input[type=text],input[type=number],input[type=date],select{transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
+  input[type=text]:hover,input[type=number]:hover,input[type=date]:hover,select:hover{border-color:var(--brand2)}
+  input[type=text]:focus,input[type=number]:focus,input[type=date]:focus,select:focus{outline:none;border-color:var(--brand2);box-shadow:var(--ring)}
+  /* 键盘聚焦时补回可见轮廓（鼠标点击不显示，避免干扰） */
+  input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
+
+  /* 5) 回到顶部按钮 */
+  #toTop{transition:opacity var(--dur) var(--ease),background-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  #toTop:hover{background:var(--brand2);transform:var(--lift);box-shadow:0 8px 20px rgba(47,111,143,.42)}
+  #toTop:active{transform:var(--press);box-shadow:0 2px 8px rgba(47,111,143,.3);transition-duration:.08s}
+
+  /* 6) 尊重系统「减弱动效」：关掉所有位移与过渡，但保证内容仍可见 */
   @media(prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
     *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
-    .btn:hover:not(:disabled),.resultnav a:hover{transform:none}
+    .btn:hover:not(:disabled),.btn:active:not(:disabled),
+    .resultnav a:hover,.resultnav a:active,
+    .surveynav .sn-chip:hover,.surveynav .sn-chip:active,
+    .opt span:hover,.opt span:active,
+    #toTop:hover,#toTop:active{transform:none}
+    .reveal{opacity:1;transform:none}
   }
 
   @media(max-width:640px){
