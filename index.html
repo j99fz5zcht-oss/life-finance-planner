@@ -10,7 +10,7 @@
   :root{
     --bg:#f5f7fa; --card:#ffffff; --ink:#1f2933; --sub:#52606d; --line:#e4e7eb;
     --brand:#1e3a5f; --brand2:#2563eb; --pos:#d64545; --neg:#1f9d55; --warn:#e0a82e;
-    --soft:#eef2f7; --a:#2563eb; --b:#b45309; --inv:#2563eb; --pass:#1f9d55; --gold:#b45309;
+    --soft:#eef2f7; --a:#2563eb; --b:#b45309; --inv:#2563eb; --pass:#1f9d55; --gold:#c9a227;
     /* 交互 token：全站可点击元素统一时长/缓动/位移/阴影/焦点环 */
     --dur:.2s; --ease:cubic-bezier(.4,0,.2,1);
     --lift:translateY(-1px); --press:translateY(1px);
@@ -68,7 +68,7 @@
   .kpi{background:var(--soft);border-radius:12px;padding:16px;border-left:3px solid var(--brand2);transition:box-shadow var(--dur) var(--ease),transform var(--dur) var(--ease)}
   .kpi:hover{box-shadow:var(--sd1);transform:var(--lift)}
   .kpi .t{font-size:12.5px;color:var(--sub)}
-  .kpi .v{font-size:22px;font-weight:700;margin-top:4px;color:var(--gold);font-variant-numeric:tabular-nums}
+  .kpi .v{font-size:22px;font-weight:700;margin-top:4px;color:var(--ink);font-variant-numeric:tabular-nums}
   .v.pos{color:var(--pos)} .v.neg{color:var(--neg)} .v.warn{color:var(--warn)}
   table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
   table.tbl th,table.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
@@ -88,9 +88,9 @@
   .verdict{background:var(--soft);border-radius:10px;padding:16px 18px;font-size:14px}
   .verdict b{color:var(--brand)}
   .tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11.5px;font-weight:600;margin-left:6px}
-  .tag.safe{background:#fdeaea;color:#a52a1e} .tag.risk{background:#eaf3ec;color:#186a3e} .tag.mid{background:#fbf0dd;color:var(--warn)}
+  .tag.safe{background:#fdeaea;color:#a52a1e} .tag.risk{background:#eaf3ec;color:#186a3e} .tag.mid{background:#eef2f7;color:var(--sub);border-color:var(--line)}
   /* 重点数字高亮胶囊：行内关键金额/年龄用，强调「这是要盯住的数」 */
-  .hl{display:inline-block;padding:1px 9px;border-radius:8px;background:var(--gold);color:#fff;font-weight:700;font-variant-numeric:tabular-nums;box-shadow:var(--sd3)}
+  .hl{display:inline-block;padding:1px 9px;border-radius:8px;background:var(--gold);color:#1a1206;font-weight:700;font-variant-numeric:tabular-nums;box-shadow:var(--sd3)}
   .bang{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e5484d;color:#fff;font-style:normal;font-weight:700;font-size:12px;line-height:1;margin-right:5px;vertical-align:middle}
   .flex-head{display:flex;align-items:center;gap:8px} .flex-head .sect-tag{margin-left:auto}
   .check{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--pos);color:#fff;font-style:normal;font-weight:700;font-size:11px;line-height:1;margin-right:5px;vertical-align:middle}
@@ -467,17 +467,17 @@
   .draft-bar svg{width:15px;height:15px;flex:0 0 auto}
   .draft-bar .txt{flex:1;min-width:0;line-height:1.5}
   /* #2+#4 一屏结论 & 行动杠杆 */
-  .verdict-top{background:linear-gradient(180deg,#eaf1fb,var(--soft));border-left:4px solid var(--brand);box-shadow:var(--sd1)}
+  .verdict-top{background:linear-gradient(180deg,#eaf1fb,var(--soft));border-left:4px solid var(--gold);box-shadow:var(--sd1)}
   .vt-step{background:var(--brand2)}
   .vt-line{display:flex;gap:11px;padding:7px 0;font-size:14.5px;line-height:1.65}
   .vt-line .vt-k{flex:0 0 auto;font-weight:600;color:var(--brand);min-width:52px}
-  .vt-line b{font-weight:700;color:var(--gold)}
+  .vt-line b{font-weight:700;color:var(--brand)}
   .vt-levers{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px}
   .vt-lever{background:#fff;border:1px solid var(--line);border-left:3px solid var(--brand2);border-radius:10px;padding:10px 12px}
   .vt-lever .n{font-size:13px;font-weight:600;color:var(--ink)}
   .vt-lever .d{font-size:13.5px;margin-top:4px;font-variant-numeric:tabular-nums}
   .vt-lever.best{border-color:var(--brand);border-left:3px solid var(--brand);background:linear-gradient(180deg,#f7f2e6,#faf6ec);box-shadow:var(--sd1)}
-  .vt-lever.best .n{color:var(--gold)}
+  .vt-lever.best .n{color:var(--brand)}
   .vt-note{font-size:12px;color:var(--sub);margin-top:10px;line-height:1.6}
   /* #3 调参滑块 */
   .tune-box{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
@@ -534,7 +534,7 @@
 
   /* 5. 页头总进度条 */
   .head-progress{height:6px;border-radius:6px;background:rgba(255,255,255,.28);margin-top:16px;overflow:hidden}
-  .head-fill{height:100%;width:0;background:#fff;border-radius:6px;transition:width .35s ease}
+  .head-fill{height:100%;width:0;background:var(--gold);border-radius:6px;transition:width .35s ease}
 
   /* 9. 平滑滚动 + sticky 导航偏移 */
   html{scroll-behavior:smooth}
@@ -570,9 +570,9 @@
     .stage-tbl th,.tbl th{background:var(--soft)}
     .stage-tbl td.ref{background:var(--soft)}
     .hl{background:var(--gold);color:#1a1206}
-    .kpi .v{color:var(--gold)}
-    .vt-line b{color:var(--gold)}
-    .vt-lever.best .n{color:var(--gold)}
+    .kpi .v{color:var(--ink)}
+    .vt-line b{color:var(--brand)}
+    .vt-lever.best .n{color:var(--brand)}
     .resultnav,.surveynav{background:rgba(30,41,59,.92);border-color:var(--line)}
     .surveynav .sn-chip,.resultnav a{background:var(--soft)}
     .export-bar{background:var(--card)}
@@ -595,11 +595,12 @@
   .card.collapsed{box-shadow:var(--sd1)}
 
   /* #4 首屏 hero 数字（32px 金字，强调终点） */
-  .vt-hero{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:4px 0 12px;margin-bottom:8px;border-bottom:1px dashed var(--line)}
-  .vt-hero .hn{font-size:32px;font-weight:800;line-height:1.1;color:var(--gold);font-variant-numeric:tabular-nums}
+  .vt-hero{display:flex;flex-direction:column;gap:2px;padding:2px 0 12px;margin-bottom:10px;border-bottom:1px dashed var(--line)}
+  .vt-hero-tag{display:inline-block;align-self:flex-start;background:var(--gold);color:#1a1206;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;letter-spacing:.5px;margin-bottom:6px}
+  .vt-hero .hn{font-size:40px;font-weight:800;line-height:1.05;color:var(--brand);font-variant-numeric:tabular-nums}
   .vt-hero .hn.neg{color:var(--neg)} .vt-hero .hn.pos{color:var(--pos)}
-  .vt-hero .hn .u{font-size:15px;font-weight:600;margin-left:3px;color:var(--sub)}
-  .vt-hero .hs{font-size:13px;color:var(--sub)}
+  .vt-hero .hn .u{font-size:16px;font-weight:600;margin-left:4px;color:var(--sub)}
+  .vt-hero .hs{font-size:13px;color:var(--sub);margin-top:2px}
 
   /* #9 重点句引用块（窗口 / 怎么补 左侧色条） */
   .vt-line.quote{border-left:3px solid var(--brand2);background:var(--soft);padding:8px 12px;margin:7px 0;border-radius:0 9px 9px 0}
@@ -2104,10 +2105,10 @@
     const hero=$('#vtHero');
     if(hero){
       if(!hasGap){
-        hero.innerHTML=`<div class="hn">余 <span class="u">${m.finalEnd.toFixed(1)} 万</span></div><div class="hs">够花到 <b>${m.finalAge}</b> 岁 · 全程为正</div>`;
+        hero.innerHTML=`<div class="vt-hero-tag">你的终点</div><div class="hn">余 <span class="u">${m.finalEnd.toFixed(1)} 万</span></div><div class="hs">够花到 <b>${m.finalAge}</b> 岁 · 全程为正</div>`;
       }else{
         const fn=m.firstNegative;
-        hero.innerHTML=`<div class="hn ${fn?'neg':'pos'}">${fn?fn.age+' 岁':'见底'}<span class="u">${fn?'把钱花完':''}</span></div><div class="hs">${fn?('到 '+m.finalAge+' 岁还差 <b>'+Math.abs(m.gapAtTarget).toFixed(1)+'</b> 万'):'收入覆盖不了支出'}</div>`;
+        hero.innerHTML=`<div class="vt-hero-tag">你的终点</div><div class="hn ${fn?'neg':'pos'}">${fn?fn.age+' 岁':'见底'}<span class="u">${fn?'把钱花完':''}</span></div><div class="hs">${fn?('到 '+m.finalAge+' 岁还差 <b>'+Math.abs(m.gapAtTarget).toFixed(1)+'</b> 万'):'收入覆盖不了支出'}</div>`;
       }
     }
     box.innerHTML=h;
