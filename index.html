@@ -520,6 +520,60 @@
     .card h2{background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .kpi,.risk-cell,.diag-box,.notebox,.total-row{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
+  /* ===== 视觉增强（2026-08-29 第 41 轮）===== */
+  /* 3. 图表卡片框 + 图例 */
+  .chart-card{border:1px solid var(--line);border-radius:12px;background:var(--soft);padding:12px 14px;margin-top:10px}
+  .chart-caption{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-bottom:8px}
+  .cc-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .cc-line{background:var(--brand)} .cc-base{background:var(--neg)}
+
+  /* 4. 结果卡片入场微动效 */
+  @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card{animation:cardIn .42s cubic-bezier(.4,0,.2,1) both}
+  @media(prefers-reduced-motion:reduce){ .card{animation:none} }
+
+  /* 5. 页头总进度条 */
+  .head-progress{height:6px;border-radius:6px;background:rgba(255,255,255,.28);margin-top:16px;overflow:hidden}
+  .head-fill{height:100%;width:0;background:#fff;border-radius:6px;transition:width .35s ease}
+
+  /* 9. 平滑滚动 + sticky 导航偏移 */
+  html{scroll-behavior:smooth}
+  .card,.qgroup,#sec-top{scroll-margin-top:72px}
+
+  /* 10. 字体层级精修：标题字距 + 关键数字等宽 */
+  .card h2{font-weight:700;letter-spacing:.3px}
+  .tbl td,.fin2 .num,.vt-lever .d,.v,.kpi .v{font-variant-numeric:tabular-nums}
+
+  /* 8. 暗色模式（跟随系统 prefers-color-scheme） */
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f172a; --card:#1e293b; --ink:#e6edf3; --sub:#9fb0c0; --line:#334155;
+      --soft:#16222e; --brand:#14b8a6; --brand2:#2dd4bf;
+      --sd1:0 2px 6px rgba(0,0,0,.32); --sd2:0 6px 16px rgba(0,0,0,.42); --sd3:0 3px 10px rgba(0,0,0,.46);
+      --ring:0 0 0 3px rgba(45,212,191,.28);
+    }
+    body{background:var(--bg)}
+    header.top{box-shadow:0 8px 24px rgba(0,0,0,.45)}
+    .card{background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.25)}
+    .opt span,.childrow,.annrow,.itemrow,.stage-tbl,.intro-bar,.itype{background:var(--card)}
+    input,select,textarea{background:var(--card);color:var(--ink)}
+    .tbl th.th-bal{background:#1c2a36;color:#9fb0c0}
+    .tbl tr.total-row td{background:#1c2a36}
+    .notebox{background:#16222e;border-color:#2a3b4d;color:#a9bccd}
+    .itype.t-social{background:#16222e;border-color:#2a3b4d}
+    table.mx th.col-w{background:#1c2a36}
+    .qg-head:active{background:#1c2a36}
+    .chart-card{background:var(--soft)}
+    .tag.safe{background:#103126;color:#5fd6a0} .tag.risk{background:#3a1718;color:#f08a8a} .tag.mid{background:#332713;color:#f0c272}
+    .verdict-top{background:linear-gradient(180deg,#103029,var(--soft))}
+    .vt-lever.best{background:linear-gradient(180deg,#103029,#13302a)}
+    .stage-tbl th,.tbl th{background:var(--soft)}
+    .stage-tbl td.ref{background:var(--soft)}
+    .resultnav,.surveynav{background:rgba(30,41,59,.92);border-color:var(--line)}
+    .surveynav .sn-chip,.resultnav a{background:var(--soft)}
+    .export-bar{background:var(--card)}
+    .survey-cta{background:linear-gradient(to top,rgba(30,41,59,.985) 72%,rgba(30,41,59,0))}
+  }
 </style>
 </head>
 <body>
@@ -527,6 +581,7 @@
   <header class="top">
     <h1>人生财务 & 岔路决策器</h1>
     <p>一份问卷，同时回答两件事：① 你的钱能撑到几岁、缺口在哪；② 站在生娃/自由的人生岔路口，按你真正在意的权重，哪条路更站得住。定量与定性在一张表里打通。</p>
+    <div class="head-progress" role="progressbar" aria-label="问卷完成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="head-fill" id="headFill"></div></div>
   </header>
 
   <!-- ====== A. 财务测算问卷 ====== -->
@@ -596,7 +651,7 @@
 
     <div class="qgroup" id="grp-2">
       <div class="qg-head">
-        <span class="qg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+        <span class="qg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H3z"/><rect x="3" y="9" width="18" height="11" rx="2"/><circle cx="16.5" cy="14.5" r="1.5"/></svg></span>
         <div><div class="qg-title">收入与资产投入</div><div class="qg-desc">当前资产与收益预期、劳动收入、一次性大额进账，以及各项投资与被动收入来源</div></div>
       </div>
 
@@ -888,7 +943,10 @@
     <div class="card" id="sec-traj">
       <h2><span class="step">A</span>逐年余额轨迹</h2>
       <p class="hint">纵轴为当年末流动资产余额（万元），跌破 0 即该年起资金见底。</p>
-      <div class="chartbox"><canvas id="chart"></canvas></div>
+      <div class="chart-card">
+        <div class="chart-caption"><span class="cc-dot cc-line"></span>年末余额（万）<span class="cc-dot cc-base"></span>0 基准线（跌破即见底）</div>
+        <div class="chartbox"><canvas id="chart"></canvas></div>
+      </div>
       <details class="dt-wrap" id="chartTable">
         <summary>查看图表数据表（可复制 · 供读屏使用）</summary>
         <div class="dt-body"></div>
@@ -1003,7 +1061,7 @@
   // 分区语义图标：与问题编号 1-10 在形态上完全区分，避免两套数字打架
   const SG_ICON={
     'grp-1':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-    'grp-2':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    'grp-2':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H3z"/><rect x="3" y="9" width="18" height="11" rx="2"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>',
     'grp-3':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
     'grp-4':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
   };
@@ -1015,7 +1073,7 @@
       {id:'grp-4',label:'风险保障',optional:true}
     ];
     const nav=document.getElementById('surveynav'); if(!nav) return;
-    const chipsWrap=nav.querySelector('.sn-chips'), fill=nav.querySelector('.sn-fill'), pct=nav.querySelector('.sn-pct');
+    const chipsWrap=nav.querySelector('.sn-chips'), fill=nav.querySelector('.sn-fill'), pct=nav.querySelector('.sn-pct'), headFill=document.getElementById('headFill');
     const chips=groups.map(g=>{
       const a=document.createElement('a'); a.className='sn-chip'; a.href='#'+g.id; a.dataset.gid=g.id;
       a.innerHTML='<span class="tick">✓</span>'+(SG_ICON[g.id]||'')+'<span>'+g.label+'</span>';
@@ -1075,6 +1133,7 @@
       });
       const p=Math.round(done/required.length*100);
       fill.style.width=p+'%'; if(pct) pct.textContent=p+'%';
+      if(headFill){ headFill.style.width=p+'%'; headFill.parentElement.setAttribute('aria-valuenow',p); }
     }
     const survey=document.getElementById('survey');
     survey.addEventListener('input',updateDone);
@@ -1885,7 +1944,7 @@
         if(hv!=null && hv>=0.5) forks.push({n:hn,v:hv});
         if(forks.length){
           forks.sort((a,b)=>b.v-a.v);
-          const txt=forks.map(f=>`${f.n}多剩 <b>${f.v.toFixed(1)} 万</b>`).join('、');
+          const txt=forks.map(f=>`${f.n}多剩 <span class="hl">${f.v.toFixed(1)} 万</span>`).join('、');
           h+=`<div class="vt-line"><span class="vt-k">岔路</span><span>换个活法也许更管用：${txt}（到 ${m.finalAge} 岁的差额，只算现金流，不含房产净值）。</span></div>`;
         }
       }
@@ -1929,7 +1988,7 @@
     if(typeof Chart==='undefined'){ const d=document.createElement('div'); d.textContent='（图表库未加载，请查看下方明细表）'; d.style.cssText='padding:20px;color:#52606d'; ctx.replaceWith(d); return; }
     chartRef=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'年末余额（万）',data,borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,.08)',fill:true,tension:.25,pointRadius:0,borderWidth:2}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'余额 '+fmt(c.parsed.y)+'（'+(c.parsed.y<0?'已见底':'为正')+'）'}}},
-        scales:{y:{grid:{color:'#e3f3ef'},ticks:{color:'#52606d'},title:{display:true,text:'万元',color:'#52606d'}},x:{grid:{display:false},ticks:{color:'#52606d',maxTicksLimit:14}}}}});
+        scales:{y:{grid:{color:'#cbd5e1'},ticks:{color:'#52606d'},title:{display:true,text:'万元',color:'#52606d'}},x:{grid:{display:false},ticks:{color:'#52606d',maxTicksLimit:14}}}}});
     chartRef.data.datasets.push({label:'0 基准',data:data.map(()=>0),borderColor:'#d64545',borderDash:[5,4],borderWidth:1,pointRadius:0,fill:false}); chartRef.update();
   }
   function renderTable(res){
@@ -2139,7 +2198,7 @@
     box.innerHTML=
       '<div class="kpi"><div class="t">生娃路径终点'+(myIsChild?' · 你的选择':'')+'</div><div class="v '+cls(withC)+'">'+fmt(withC)+'</div></div>'+
       '<div class="kpi"><div class="t">不生娃路径终点'+(!myIsChild?' · 你的选择':'')+'</div><div class="v '+cls(noC)+'">'+fmt(noC)+'</div></div>'+
-      '<div class="kpi"><div class="t">生娃带来的差额</div><div class="v '+(delta<0?'neg':'pos')+'">'+diff+'</div></div>';
+      '<div class="kpi"><div class="t">生娃带来的差额</div><div class="v '+(delta<0?'neg':'pos')+'">'+(delta<0?'▼ ':delta>0?'▲ ':'')+diff+'</div></div>';
     const note=$('#childfork-note');
     note.innerHTML='差额 = 生娃路径终点 − 不生娃路径终点。差额为负，说明生娃在财务上「吞掉」了这部分余额——它不评价该不该生，只把代价摆出来，配合下方权重一起看。差额为正则生娃并未拖累终点（可能因抚养期现金流被其它被动收入覆盖）。';
   }
@@ -2156,7 +2215,7 @@
     $('#homefork-kpis').innerHTML=[
       {t:curLabel,v:fmt(cur),c:cls(cur)},
       {t:otherLabel,v:fmt(other),c:cls(other)},
-      {t:'住房岔路差额',v:diff,c:delta<0?'neg':'pos'}
+      {t:'住房岔路差额',v:(delta<0?'▼ ':delta>0?'▲ ':'')+diff,c:delta<0?'neg':'pos'}
     ].map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div></div>`).join('');
     $('#homefork-note').innerHTML='差额为负，说明购房在财务上「吞掉」了这部分余额——它不评价该不该买，只把代价摆出来；差额为正则购房并未拖累终点（可能因还贷结束后不再付租金、或房产价值未计入）。注意模型不含房产净值，纯看现金流。';
   }
