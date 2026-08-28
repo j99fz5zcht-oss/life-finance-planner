@@ -941,7 +941,7 @@
         <li><b>底线思维：</b>先算「没有任何新增收入」的最保守情形，看本金+被动收入能撑多久——是安全垫不是预测。</li>
         <li><b>逐年现金流递推：</b>期末=期初+理财收益(期初×年化)+主动收入+被动收入(投资项)−支出，次年接续、复利自然产生。</li>
         <li><b>定量→定性打通：</b>财务测算终点，映射为决策矩阵「财务安全」维度的基线分，账本结论直接进入人生取舍。</li>
-        <li><b>缺口三指标：</b>首次转负年 / 窗口最低点 / 目标年龄终点（盈余或缺口）。</li>
+        <li><b>缺口三指标：</b>开始入不敷出的年份 / 最困难的年份 / 目标年龄终点（盈余或缺口）。</li>
         <li><b>压力测试：</b>同一计划下扰动收益率与开支，看终点摆幅，提示安全垫对假设的敏感度。</li>
         <li><b>只算钱不算生活：</b>模型不含陪伴、自由、意义感等维度，故必须配合 B 部分加权决策——数字揭示代价，不替你选人生。</li>
         <li><b>务实不夸大：</b>给的是风险日历与缺口量级，不是事件剧本；参数均为估算，结论随输入变化。</li>
@@ -1757,8 +1757,8 @@
     const asYears=v=>{ const n=yr(v); return n? `≈ ${n} 年生活开支` : '（未填生活开支，无法换算）'; };
     const untilNow=age=>{ const cur=res.rows[0].age; const d=age-cur; return d>0? `距今 ${d} 年` : (d===0?'就在今年':'已过去'); };
     const items=[
-      {t:'目标年龄终点余额',v:fmt(m.finalEnd),c:cls(m.finalEnd),s: m.finalEnd<0? '到目标年龄仍为负，需提前安排': '终点仍为正'},
-      {t:'资金首次转负',v:m.firstNegative?(m.firstNegative.age+' 岁'):'—',c:m.firstNegative?'neg':'pos',s: m.firstNegative? untilNow(m.firstNegative.age) : '全程未转负'},
+      {t:'到目标年龄还剩',v:fmt(m.finalEnd),c:cls(m.finalEnd),s: m.finalEnd<0? '到那时还是负数，得提前安排': '到那时还有余钱'},
+      {t:'钱会在几岁花完',v:m.firstNegative?(m.firstNegative.age+' 岁'):'—',c:m.firstNegative?'neg':'pos',s: m.firstNegative? untilNow(m.firstNegative.age) : '全程都够花'},
       {t:'窗口最低点',v:m.worst.value===Infinity?'—':fmt(m.worst.value),c:m.worst.value<0?'neg':'pos',s: m.worst.value===Infinity?'—':((m.worst.value<0? '缺口 ':'盈余 ')+asYears(m.worst.value))},
       {t:'目标年龄缺口',v:m.gapAtTarget>0?fmt(-m.gapAtTarget):'无（盈余）',c:m.gapAtTarget>0?'neg':'pos',s: m.gapAtTarget>0? asYears(m.gapAtTarget) : '无需补缺口'},
     ];
@@ -1972,7 +1972,7 @@
   function renderVerdict(res,ans){
     const m=res.metrics; let s='';
     if(m.allPositive) s+=`<b>结论：资产在测算区间内全程为正。</b> 最薄安全垫在 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}），到 ${m.finalAge} 岁仍有 ${fmt(m.finalEnd)}。`;
-    else s+=`<b>结论：存在财务缺口。</b> 预计在 <b>${m.firstNegative.age} 岁（${m.firstNegative.year} 年）</b>首次转负，窗口最差点在 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}）。`;
+    else s+=`<b>结论：存在财务缺口。</b> 预计在 <b>${m.firstNegative.age} 岁（${m.firstNegative.year} 年）</b>开始入不敷出，最困难的是 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}）。`;
     s+='<br><br><b>钱主要被什么消耗：</b>';
     const tot={}; res.rows.forEach(r=>{tot.housing=(tot.housing||0)+r.housing;tot.daily=(tot.daily||0)+r.daily;tot.investment=(tot.investment||0)+r.investment;tot.child=(tot.child||0)+r.child;tot.parent=(tot.parent||0)+(r.parent||0);});
     const order=Object.entries(tot).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]>0); const nm={housing:'住房',daily:'基本生活',investment:'投资投入',child:'生育规划',parent:'父母赡养'};
@@ -1983,7 +1983,7 @@
     const pillarMissing=[];
     ['accident','medical','critical','life'].forEach(k=>{ if(!pillar.some(m=>(m.insured||[]).includes(k))) pillarMissing.push((INSURANCE_TYPES.find(t=>t.key===k)||{}).name); });
     if(!m.allPositive && pillarMissing.length){
-      s+=`<br><br><b>风险 × 缺口联动：</b>你在 <b>${m.firstNegative.age} 岁</b>首次转负，而家庭支柱（本人 / 配偶）尚未配置「${pillarMissing.join('、')}」——这类风险一旦发生（收入断流 / 大额医疗），缺口会<b>提前、加深</b>，建议优先补齐。`;
+      s+=`<br><br><b>风险 × 缺口联动：</b>你在 <b>${m.firstNegative.age} 岁</b>钱就会不够用，而家庭支柱（本人 / 配偶）尚未配置「${pillarMissing.join('、')}」——这类风险一旦发生（收入断流 / 大额医疗），缺口会<b>提前、加深</b>，建议优先补齐。`;
     }
     s+='<br><br><span style="color:#52606d">务实提醒：参数为估算，利率/收入/支出任一变动都会改变终点。把结果当「风险日历」，非确定剧本。</span>';
     $('#verdict').innerHTML=s;
@@ -2044,7 +2044,7 @@
       if(income>0) ctx.push('年收入约 '+income+' 万');
       if(daily>0) ctx.push('家庭年开支约 '+daily+' 万');
       if(debt>0) ctx.push('尚余负债约 '+debt+' 万');
-      d+=`<div class="diag-ctx">${ctx.join('、')}。${mm.firstNegative?('测算显示你的资产在 <b>'+mm.firstNegative.age+' 岁</b>首次转负：若支柱在此之前身故、重疾或大额医疗，收入断流叠加治疗照护支出，缺口会提前到来。'):''}</div>`;
+      d+=`<div class="diag-ctx">${ctx.join('、')}。${mm.firstNegative?('测算显示你的资产在 <b>'+mm.firstNegative.age+' 岁</b>就会花完：若支柱在此之前身故、重疾或大额医疗，收入断流叠加治疗照护支出，缺口会提前到来。'):''}</div>`;
       d+='<ul class="diag-list">';
       if(!pillarIns('life')) d+=`<li><b>寿险（定期 / 终身）</b>：建议保额 ≈ ${debt>0?('负债 '+debt+' 万 + 年开支 '+daily+' 万 × 10'):('年开支 '+daily+' 万 × 10')} = <b>${lifeAmt} 万</b>（覆盖${debt>0?'债务 + ':''}家庭 10 年过渡）</li>`;
       if(!pillarIns('critical')) d+=`<li><b>重大疾病险</b>：建议保额 ≈ 50 万治疗费 + 年收入 ${income} 万 × 3 = <b>${critAmt} 万</b>（治疗 + 康复期收入中断）</li>`;
@@ -2086,7 +2086,7 @@
     // ④ 养老 / 长寿储备
     if(pillar.length && !pillarIns('saving') && (mm.firstNegative || p.targetAge>=85)){
       let d=`<div class="diag-item"><b>④ 养老 / 长寿储备</b>`;
-      d+=`<div class="diag-ctx">${mm.firstNegative?('测算到 '+p.targetAge+' 岁存在缺口（'+mm.firstNegative.age+' 岁转负），退休后收入骤降、活太久钱不够是真实风险。'):('测算终点 '+p.targetAge+' 岁，长寿风险需提前对冲。')}</div>`;
+      d+=`<div class="diag-ctx">${mm.firstNegative?('测算到 '+p.targetAge+' 岁存在缺口（'+mm.firstNegative.age+' 岁开始不够用），退休后收入骤降、活太久钱不够是真实风险。'):('测算终点 '+p.targetAge+' 岁，长寿风险需提前对冲。')}</div>`;
       d+='<ul class="diag-list"><li><b>商业养老年金 / 增额终身寿</b>：提供与生命等长的现金流，对冲「活太久、钱不够」的长寿风险</li></ul></div>';
       diag.push(d);
     }
@@ -2102,7 +2102,7 @@
   function renderCompare(cmp){
     const base=cmp.base.metrics.finalEnd,pess=cmp.pessimistic.metrics.finalEnd,opt=cmp.optimistic.metrics.finalEnd;
     $('#cmp').innerHTML=[{t:'当前方案终点',v:fmt(base),c:cls(base)},{t:'悲观情景',v:fmt(pess),c:cls(pess)},{t:'乐观情景',v:fmt(opt),c:cls(opt)}].map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div></div>`).join('');
-    const neg=m=> m.allPositive ? '全程为正（不转负）' : (m.firstNegative ? `约 ${m.firstNegative.age} 岁首次转负` : '未明确');
+    const neg=m=> m.allPositive ? '全程够花' : (m.firstNegative ? `约 ${m.firstNegative.age} 岁花完` : '未明确');
     let note=`悲观情景（收益减半&生活开支+15%）下，终点变动约 <b>${fmt(cmp.deltaPess)}</b>，${neg(cmp.pessimistic.metrics)}；乐观情景（收益+1%&生活开支-10%）下，变动约 <b>${fmt(cmp.deltaOpt)}</b>，${neg(cmp.optimistic.metrics)}。`;
     note+='<br><span style="color:#52606d">此摆幅即你的计划对「收益与开支假设」的敏感度——假设越乐观，余量越大；越悲观，缺口越早到来。</span>';
     $('#cmp-note').innerHTML=note;
