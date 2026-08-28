@@ -461,6 +461,38 @@
   .draft-bar.show{display:flex}
   .draft-bar svg{width:15px;height:15px;flex:0 0 auto}
   .draft-bar .txt{flex:1;min-width:0;line-height:1.5}
+  /* #2+#4 一屏结论 & 行动杠杆 */
+  .verdict-top{background:var(--soft);border-left:4px solid var(--brand)}
+  .vt-step{background:var(--brand2)}
+  .vt-line{display:flex;gap:11px;padding:7px 0;font-size:14.5px;line-height:1.65}
+  .vt-line .vt-k{flex:0 0 auto;font-weight:600;color:var(--brand);min-width:52px}
+  .vt-line b{font-weight:700}
+  .vt-levers{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px}
+  .vt-lever{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .vt-lever .n{font-size:13px;font-weight:600;color:var(--ink)}
+  .vt-lever .d{font-size:13.5px;margin-top:4px;font-variant-numeric:tabular-nums}
+  .vt-lever.best{border-color:#9ed3b6;background:#f4fbf6}
+  .vt-lever.best .n{color:#1b7f3b}
+  .vt-note{font-size:12px;color:var(--sub);margin-top:10px;line-height:1.6}
+  /* #3 调参滑块 */
+  .tune-box{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+  .tune-box summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--brand);padding:4px 0;user-select:none}
+  .tune-box summary:hover{color:var(--brand2)}
+  .tune-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:10px}
+  .tune-row label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:6px}
+  .tune-row label b{color:var(--ink);font-size:13.5px;font-variant-numeric:tabular-nums}
+  .tune-row input[type=range]{width:100%;accent-color:var(--brand);height:24px;cursor:pointer}
+  .tune-note{grid-column:1/-1;font-size:12px;color:var(--sub);line-height:1.6}
+  /* #7 图表数据兜底表（同时服务读屏用户） */
+  .dt-wrap{margin-top:10px}
+  .dt-wrap summary{cursor:pointer;font-size:12.5px;color:var(--brand);padding:6px 0;user-select:none}
+  .dt-wrap summary:hover{color:var(--brand2)}
+  .dt-wrap .dt-body{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-top:6px}
+  .dt-wrap table{width:100%;border-collapse:collapse;font-size:12px}
+  .dt-wrap th,.dt-wrap td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:right}
+  .dt-wrap th{background:var(--soft);position:sticky;top:0;text-align:right;font-weight:600}
+  .dt-wrap td:first-child,.dt-wrap th:first-child{text-align:left}
+
   /* #5 KPI 数字解释 */
   .kpi .s{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.45}
   /* #9 输入校验：温和提示，不阻断 */
@@ -801,6 +833,31 @@
       <span class="exp-status" id="expStatus" role="status" aria-live="polite"><span class="dot"></span><span class="txt"></span></span>
     </div>
 
+    <!-- #2 一屏结论 + #4 行动建议：先看这里，再看细节 -->
+    <div class="card verdict-top" id="sec-top">
+      <h2 class="flex-head"><span class="step vt-step">★</span>先看这一屏</h2>
+      <div id="vtBody"></div>
+      <!-- #3 调参滑块：不用回问卷改数再重算 -->
+      <details class="tune-box" id="tuneBox">
+        <summary>拖动试试：换个假设会怎样</summary>
+        <div class="tune-body">
+          <div class="tune-row">
+            <label for="tuneRetire">退休年龄 <b id="tvRetire">—</b> 岁</label>
+            <input type="range" id="tuneRetire" min="40" max="65" step="5" value="60">
+          </div>
+          <div class="tune-row">
+            <label for="tuneSpend">年生活开支 <b id="tvSpend">—</b> 万</label>
+            <input type="range" id="tuneSpend" min="1" max="60" step="0.5" value="11">
+          </div>
+          <div class="tune-row">
+            <label for="tuneRet">年化收益率 <b id="tvRet">—</b>%</label>
+            <input type="range" id="tuneRet" min="0" max="8" step="0.5" value="2">
+          </div>
+          <div class="tune-note">调整会同步写回问卷并重算，结果实时更新（不会跳回顶部）。</div>
+        </div>
+      </details>
+    </div>
+
     <div class="card" id="sec-core">
       <h2 class="flex-head"><span class="step">A</span>核心指标<span id="kpisTag" class="sect-tag"></span></h2>
       <p class="hint" id="summary-line"></p>
@@ -827,6 +884,10 @@
       <h2><span class="step">A</span>逐年余额轨迹</h2>
       <p class="hint">纵轴为当年末流动资产余额（万元），跌破 0 即该年起资金见底。</p>
       <div class="chartbox"><canvas id="chart"></canvas></div>
+      <details class="dt-wrap" id="chartTable">
+        <summary>查看图表数据表（可复制 · 供读屏使用）</summary>
+        <div class="dt-body"></div>
+      </details>
       <div class="scroll" style="margin-top:14px"><table class="tbl" id="tbl"></table></div>
     </div>
 
@@ -1589,42 +1650,85 @@
   function fmt(n){ const v=Math.round(n*10)/10; return (v>0?'+':'')+v+' 万'; }
   function cls(n){ return n<0?'neg':'pos'; }
 
-  function run(){
-    $('#err').textContent=''; $('#err').classList.remove('show');
-    let ans,plan,res,cmp,endVal;
-    try{
-      ans=gather();
-      if(ans.currentAge==null){ const e=$('#err'); e.textContent='⚠ 请填写有效的出生日期'; e.classList.add('show'); return; }
-      plan=FPEngine.buildPlan(ans); res=FPEngine.project(plan); cmp=FPEngine.compare(plan);
-      endVal=res.metrics.finalEnd;
-    }catch(e){ const er=$('#err'); er.textContent='⚠ 计算出错：'+e.message; er.classList.add('show'); return; }
-    $('#survey').style.display='none'; $('#results').style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
-
-    // 生娃与否 · 财务岔路：始终对比「生娃路径」vs「不生娃路径」
+  /* ---- #3 调参滑块：改问卷字段 → 静默重算，不切视图不滚动 ---- */
+  function syncTuners(plan){
+    const r=$('#tuneRetire'), s=$('#tuneSpend'), t=$('#tuneRet');
+    if(r){ r.value=plan.retireAge||60; const o=$('#tvRetire'); if(o) o.textContent=r.value; }
+    if(s){ s.value=plan.dailyAnnual||0; const o=$('#tvSpend'); if(o) o.textContent=s.value; }
+    if(t){ const pct=Math.round((plan.returnRate||0)*1000)/10; t.value=pct; const o=$('#tvRet'); if(o) o.textContent=pct; }
+  }
+  function setupTuners(){
+    let timer=null;
+    const recalc=()=>{
+      clearTimeout(timer);
+      timer=setTimeout(()=>{
+        if(!$('#results') || $('#results').style.display==='none') return;
+        try{ renderAll(computeAll()); }catch(e){ /* 滑块中间态可能不合法，忽略 */ }
+      },120);
+    };
+    const bind=(id,apply,showId)=>{
+      const el=$(id); if(!el) return;
+      el.addEventListener('input',()=>{
+        apply(el.value);
+        const o=$(showId); if(o) o.textContent=el.value;
+        recalc();
+      });
+    };
+    bind('#tuneRetire',v=>{
+      const sel=$('#retireAge'); if(sel){ sel.value=v; sel.dispatchEvent(new Event('change',{bubbles:true})); }
+    },'#tvRetire');
+    bind('#tuneSpend',v=>{
+      const inp=$('#dailyTotal'); if(inp){ inp.value=v; inp.dispatchEvent(new Event('input',{bubbles:true})); }
+    },'#tvSpend');
+    bind('#tuneRet',v=>{
+      const sel=$('#ret'); if(!sel) return;
+      const map={'2':'0.02','2.5':'0.025','3':'0.03','3.5':'0.035','4':'0.04','4.5':'0.045','5':'0.05'};
+      if(map[String(v)]){ sel.value=map[String(v)]; }
+      else { sel.value='custom'; const c=$('#retCustom'); if(c) c.value=v; }
+      sel.dispatchEvent(new Event('change',{bubbles:true}));
+    },'#tvRet');
+  }
+  function computeAll(){
+    const ans=gather();
+    if(ans.currentAge==null){ const e=new Error('请填写有效的出生日期'); e.isDateError=true; throw e; }
+    const plan=FPEngine.buildPlan(ans); const res=FPEngine.project(plan); const cmp=FPEngine.compare(plan);
     const ca = ans.childAssume;
     const planChild = Object.assign({}, plan, { children:{ plan:(ca.plan==='has'?'has':'yes'), count:ca.count, startYear:ca.startYear, annualCost:0, years:0, incomeLoss:ca.incomeLoss, kids:(ca.kids||[]), stages: ca.stages } });
     const resChild = FPEngine.project(planChild);
     const planNoChild = Object.assign({}, plan, { children:{ plan:'no', count:0, startYear:ca.startYear, annualCost:0, years:0, incomeLoss:0, kids:[], stages: ca.stages } });
     const resNoChild = FPEngine.project(planNoChild);
-    // 买房与否 · 决策对照：购房 / 一直租房 互换各算一次
     const planRent = Object.assign({}, plan, { housing:'rent' });
     const resRent = FPEngine.project(planRent);
     const planBuy = Object.assign({}, plan, { housing:'buy' });
     const resBuy = FPEngine.project(planBuy);
-
-    renderSummary(plan,res,ans); renderKPIs(res,plan); renderPrintHead(plan,res); renderChart(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
-    renderSynthesisInit(endVal,cmp);
-    renderChildFork(resChild, resNoChild, ans);
-    renderHomeFork(plan, res, resRent, resBuy, ans);
+    return {ans,plan,res,cmp,ca,resChild,resNoChild,resRent,resBuy,endVal:res.metrics.finalEnd};
+  }
+  function renderAll(R){
+    const ans=R.ans,plan=R.plan,res=R.res,cmp=R.cmp;
+    renderSummary(plan,res,ans); renderKPIs(res,plan); renderTopVerdict(plan,res); renderPrintHead(plan,res); renderChart(res); renderChartTable(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
+    renderSynthesisInit(R.endVal,cmp);
+    renderChildFork(R.resChild, R.resNoChild, ans);
+    renderHomeFork(plan, res, R.resRent, R.resBuy, ans);
     renderInvest(res, ans);
     renderAssump(plan,ans);
     renderRisk(ans, plan, res);
     setupResultNav();
   }
+  function run(){
+    $('#err').textContent=''; $('#err').classList.remove('show');
+    let R;
+    try{ R=computeAll(); }
+    catch(e){ const er=$('#err'); er.textContent=(e.isDateError?'⚠ 请填写有效的出生日期':'⚠ 计算出错：'+e.message); er.classList.add('show'); return; }
+    renderAll(R);
+    $('#survey').style.display='none'; $('#results').style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
+    syncTuners(R.plan);
+  }
+  let __navBound=false;
   function setupResultNav(){
     const nav=$('#resultnav'); if(!nav) return;
     const links=Array.from(nav.querySelectorAll('a[data-sec]'));
     const sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const toTop=$('#toTop');
     let ticking=false;
     function spy(){
       ticking=false;
@@ -1632,12 +1736,15 @@
       for(const s of sections){ if(s.offsetParent===null) continue; if(s.getBoundingClientRect().top <= 120) active=s; }
       links.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+active.id));
     }
-    window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(spy); } },{passive:true});
-    spy();
-    const toTop=$('#toTop');
-    function tog(){ if((window.scrollY||window.pageYOffset)>600) toTop.classList.add('show'); else toTop.classList.remove('show'); }
-    window.addEventListener('scroll',tog,{passive:true}); tog();
-    toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+    function tog(){ if(toTop) { if((window.scrollY||window.pageYOffset)>600) toTop.classList.add('show'); else toTop.classList.remove('show'); } }
+    // 幂等：滑块会频繁调用 renderAll → setupResultNav，监听器只能绑一次
+    if(!__navBound){
+      __navBound=true;
+      window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(spy); } },{passive:true});
+      window.addEventListener('scroll',tog,{passive:true});
+      if(toTop) toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+    }
+    spy(); tog();
   }
 
   function renderSummary(plan,res,ans){ $('#summary-line').textContent=`当前 ${plan.currentAge} 岁、起点本金约 ${plan.startBalance} 万、测算区间 ${res.rows[0].age}–${res.metrics.finalAge} 岁、年化 ${Math.round(plan.returnRate*1000)/10}%。`; }
@@ -1656,6 +1763,57 @@
       {t:'目标年龄缺口',v:m.gapAtTarget>0?fmt(-m.gapAtTarget):'无（盈余）',c:m.gapAtTarget>0?'neg':'pos',s: m.gapAtTarget>0? asYears(m.gapAtTarget) : '无需补缺口'},
     ];
     $('#kpis').innerHTML=items.map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div>${i.s?`<div class="s">${i.s}</div>`:''}</div>`).join('');
+  }
+  /* ---- #2 一屏结论 + #4 行动杠杆 ----
+     杠杆复用 run() 已有的模式：Object.assign 出变体 plan 再 project，其他条件不变 */
+  function leverPlans(plan){
+    return [
+      {name:'晚 3 年退休', plan:Object.assign({},plan,{retireAge:Math.min((plan.retireAge||60)+3,80)})},
+      {name:'年开支降 10%', plan:Object.assign({},plan,{dailyAnnual:(plan.dailyAnnual||0)*0.9})},
+      {name:'年化收益 +0.5%', plan:Object.assign({},plan,{returnRate:(plan.returnRate||0)+0.005})}
+    ];
+  }
+  function renderTopVerdict(plan,res){
+    const box=$('#vtBody'); if(!box) return;
+    const m=res.metrics; const daily=plan.dailyAnnual||0;
+    const yTxt=v=> daily>0 ? `≈ ${(Math.abs(v)/daily).toFixed(1)} 年生活开支` : '';
+    const curAge=res.rows[0].age;
+    const hasGap = !!m.firstNegative || m.finalEnd<0;
+    let h='';
+    if(!hasGap){
+      // fmt() 自带「万」单位，不要再拼
+      h+=`<div class="vt-line"><span class="vt-k">结论</span><span>按当前假设，资金<b>全程为正</b>，到 ${m.finalAge} 岁仍余约 <b>${fmt(m.finalEnd)}</b>。</span></div>`;
+      h+=`<div class="vt-line"><span class="vt-k">富余</span><span>${yTxt(m.finalEnd)||'—'}</span></div>`;
+    }else{
+      const fn=m.firstNegative;
+      h+=`<div class="vt-line"><span class="vt-k">结论</span><span>${fn?`按当前假设，资金将在 <b>${fn.age} 岁</b>首次转负（距今 ${Math.max(0,fn.age-curAge)} 年）。`:'按当前假设，资金在测算区间内<b>无法覆盖支出</b>。'}</span></div>`;
+      h+=`<div class="vt-line"><span class="vt-k">缺口</span><span>到 ${m.finalAge} 岁约 <b>${fmt(-m.gapAtTarget)}</b>${yTxt(m.gapAtTarget)?`，${yTxt(m.gapAtTarget)}`:''}。</span></div>`;
+    }
+    const levers=[];
+    leverPlans(plan).forEach(L=>{
+      let r; try{ r=FPEngine.project(L.plan); }catch(e){ return; }
+      if(!r||!r.metrics) return;
+      const bAge=m.firstNegative?m.firstNegative.age:null;
+      const nAge=r.metrics.firstNegative?r.metrics.firstNegative.age:null;
+      levers.push({name:L.name, dEnd:r.metrics.finalEnd-m.finalEnd, dFirst:(bAge!=null&&nAge!=null)?(nAge-bAge):null});
+    });
+    levers.sort((a,b)=>b.dEnd-a.dEnd);
+    // 无缺口时不硬凑建议：杠杆只在真正需要补缺口时出现
+    if(hasGap && levers.some(l=>l.dEnd>0.5)){
+      h+='<div class="vt-levers">'+levers.map((L,i)=>{
+        const extra=(L.dFirst&&L.dFirst>0)?`（转负推迟 ${L.dFirst} 年）`:'';
+        return `<div class="vt-lever${i===0?' best':''}"><div class="n">${L.name}${i===0?' · 最有效':''}</div><div class="d">终点余额 ${(L.dEnd>=0?'+':'')}${fmt(L.dEnd)} 万 ${extra}</div></div>`;
+      }).join('')+'</div>';
+      h+='<div class="vt-note">以上为各自单独调整一项的效果（其他条件不变），组合调整不等于简单相加。</div>';
+    }
+    box.innerHTML=h;
+  }
+  /* ---- #7 图表数据兜底表：canvas 对读屏不可见，补一份真实数据 ---- */
+  function renderChartTable(res){
+    const box=$('#chartTable'); if(!box) return;
+    const body=box.querySelector('.dt-body'); if(!body) return;
+    body.innerHTML='<table><tr><th>年龄</th><th>年末余额（万）</th></tr>'+
+      res.rows.map(r=>`<tr><td>${r.age} 岁</td><td>${r.end.toFixed(2)}</td></tr>`).join('')+'</table>';
   }
   function renderChart(res){
     const ctx=$('#chart'); const labels=res.rows.map(r=>r.age+'岁'); const data=res.rows.map(r=>r.end);
@@ -2008,6 +2166,7 @@
 
   $('#run').addEventListener('click',run);
   setupValidation();
+  setupTuners();
   $('#back').addEventListener('click',()=>{ $('#results').style.display='none'; $('#survey').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
 
   // ---- #9 输入校验：温和提示范围异常，不阻断提交 ----
