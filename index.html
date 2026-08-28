@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生财务 & 岔路决策器</title>
+<script src="engine.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#ffffff; --ink:#1f2933; --sub:#52606d; --line:#e4e7eb;
+    --brand:#2f6f8f; --brand2:#3b8ea5; --pos:#1f9d55; --neg:#d64545; --warn:#e09f3e;
+    --soft:#eef4f7; --a:#3b82c4; --b:#d98456; --inv:#3b82c4; --pass:#1f9d55;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 18px 80px}
+  header.top{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-radius:16px;padding:26px 28px;box-shadow:0 8px 24px rgba(47,111,143,.18)}
+  header.top h1{margin:0 0 6px;font-size:23px;letter-spacing:.5px}
+  header.top p{margin:0;opacity:.92;font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:20px;box-shadow:0 2px 10px rgba(31,41,51,.04)}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--brand)}
+  .card .hint{color:var(--sub);font-size:13px;margin:0 0 16px}
+  .step{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;margin-right:8px}
+  .q{margin:0 0 18px;padding-bottom:16px;border-bottom:1px dashed var(--line)}
+  .q:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+  .q .label{font-weight:600;font-size:15px;margin-bottom:8px;display:block}
+  .q .label small{font-weight:400;color:var(--sub);font-size:12px;margin-left:6px}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{position:relative}
+  .opt input{position:absolute;opacity:0;pointer-events:none}
+  .opt span{display:inline-block;padding:7px 14px;border:1px solid var(--line);border-radius:20px;font-size:13.5px;background:#fff;cursor:pointer;transition:.15s;user-select:none}
+  .opt input:checked + span{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .opt span:hover{border-color:var(--brand2)}
+  .cond{margin-top:12px;padding:14px 16px;background:var(--soft);border-radius:10px;border-left:3px solid var(--brand2);display:none}
+  .cond.show{display:block}
+  .cond .crow{display:flex;flex-wrap:wrap;gap:16px}
+  .cond .citem{min-width:200px}
+  .stage-head{margin:14px 0 6px;font-size:13px;font-weight:600;color:var(--brand)}
+  .stage-tbl{width:100%;border-collapse:collapse;margin:4px 0 2px;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .stage-tbl th,.stage-tbl td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)}
+  .stage-tbl th{background:var(--soft);color:var(--ink);font-weight:600}
+  .stage-tbl tr:last-child td{border-bottom:none}
+  .stage-tbl td .age{color:var(--sub);font-size:12px}
+  .stage-tbl td.ref{color:var(--brand);font-weight:600;white-space:nowrap;background:var(--soft)}
+  .stage-tbl input[type=number]{width:92px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:14px;text-align:right}
+  .stage-tbl input[type=number]:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(59,142,165,.15)}
+  .cond label{font-size:13px;color:var(--sub);display:block;margin-bottom:5px}
+  .cond input[type=number],.cond select,.cond input[type=date]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .cond input[type=number]{width:100%}
+  .cond select{padding:8px 10px}
+  .btn{display:inline-block;margin-top:6px;background:var(--brand);color:#fff;border:0;padding:13px 30px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--brand2)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  .btn.sm{padding:6px 14px;font-size:13px;margin-top:0}
+  .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  /* sticky submit bar for the long questionnaire */
+  .survey-cta{position:sticky;bottom:0;z-index:15;margin-top:18px;padding:16px 0 4px;background:linear-gradient(to top,rgba(255,255,255,.98) 72%,rgba(255,255,255,0))}
+  .survey-cta .actions{justify-content:flex-end}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:8px 0 4px}
+  .kpi{background:var(--soft);border-radius:12px;padding:16px}
+  .kpi .t{font-size:12.5px;color:var(--sub)}
+  .kpi .v{font-size:22px;font-weight:700;margin-top:4px}
+  .v.pos{color:var(--pos)} .v.neg{color:var(--neg)} .v.warn{color:var(--warn)}
+  table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  table.tbl th,table.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+  table.tbl th{background:var(--soft);color:var(--sub);position:sticky;top:0;font-weight:600}
+  table.tbl td.fy,table.tbl th.fy{text-align:left}
+  .scroll{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .negcell{color:var(--neg);font-weight:600}
+  .poscell{color:var(--pos)}
+  .tbl th.th-inc{background:#e6f4ea;color:#1b7f3b}
+  .tbl th.th-exp{background:#fdeaea;color:#c0392b}
+  .tbl th.th-bal{background:#eef2f5;color:#33475b}
+  .tbl td.td-inc{background:#f3fbf5}
+  .tbl td.td-exp{background:#fdf4f4}
+  .tbl tr.total-row td{font-weight:700;background:#eaeff5;border-top:2px solid var(--line)}
+  .tbl tr.total-row td.fy{color:#33475b}
+  .chartbox{height:340px;margin-top:8px}
+  .verdict{background:var(--soft);border-radius:10px;padding:16px 18px;font-size:14px}
+  .verdict b{color:var(--brand)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11.5px;font-weight:600;margin-left:6px}
+  .tag.safe{background:#e3f5ea;color:var(--pos)} .tag.risk{background:#fbe6e6;color:var(--neg)} .tag.mid{background:#fbf0dd;color:var(--warn)}
+  .bang{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e5484d;color:#fff;font-style:normal;font-weight:700;font-size:12px;line-height:1;margin-right:5px;vertical-align:middle}
+  .flex-head{display:flex;align-items:center;gap:8px} .flex-head .sect-tag{margin-left:auto}
+  .check{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--pos);color:#fff;font-style:normal;font-weight:700;font-size:11px;line-height:1;margin-right:5px;vertical-align:middle}
+  .method li{margin-bottom:8px;font-size:13.5px;color:var(--sub)}
+  .method b{color:var(--ink)}
+  .foot{color:var(--sub);font-size:12px;margin-top:18px;text-align:center}
+  .err{display:none;color:#b3261e;background:#fdecea;border:1px solid #f3b7b1;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:12px}
+  .err.show{display:block}
+  /* decision matrix */
+  .fin2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 14px}
+  .fin2 .col{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .fin2 .col.a{border-left:4px solid var(--a)} .fin2 .col.b{border-left:4px solid var(--b)}
+  .fin2 .col h3{margin:0 0 2px;font-size:14px} .fin2 .col.a h3{color:var(--a)} .fin2 .col.b h3{color:var(--b)}
+  .fin2 .num{font-size:22px;font-weight:700} .fin2 .sub{font-size:12px;color:var(--sub)}
+  table.mx{width:100%;border-collapse:collapse}
+  table.mx th,table.mx td{padding:10px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  table.mx th{color:var(--sub);font-weight:600;text-align:center}
+  table.mx td.dim{text-align:left;font-weight:600}
+  table.mx td.dim small{display:block;color:var(--sub);font-weight:400;font-size:11px}
+  input[type=range]{width:100%;accent-color:var(--brand)}
+  input[type=range].b{accent-color:var(--b)}
+  .val{font-variant-numeric:tabular-nums;text-align:center;font-weight:600;width:30px;display:inline-block}
+  .scorebar{height:6px;border-radius:3px;background:var(--soft);overflow:hidden;margin-top:4px}
+  .scorebar i{display:block;height:100%} .scorebar i.a{background:var(--a)} .scorebar i.b{background:var(--b)}
+  .total{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .tcard{border-radius:12px;padding:16px;color:#fff;text-align:center}
+  .tcard.a{background:var(--a)} .tcard.b{background:var(--b)}
+  .tcard .big{font-size:30px;font-weight:800} .tcard .lbl{font-size:13px;opacity:.92} .tcard .pct{font-size:12px;opacity:.85;margin-top:2px}
+  .note{font-size:12px;color:var(--sub);margin-top:10px}
+  .hintbox{background:#fff8ef;border:1px solid #f3e2c7;color:#8a6a3a;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:18px}
+  .notebox{background:#eef4f7;border:1px solid #d4e3ea;color:#3a5a68;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-top:10px}
+  .mp{font-size:14px;font-weight:600;color:var(--brand);margin-top:10px}
+  /* B 部分两层结构 */
+  .layer{margin:16px 0;padding:16px 18px;border:1px solid #e1e8f0;border-radius:14px;background:#fbfcfe}
+  .layer + .layer{margin-top:6px}
+  .layer-head{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:#1f2d3d;margin-bottom:10px}
+  .layer-no{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;font-weight:700;flex:none}
+  /* 矩阵三列区分：权重=brand(绿蓝) / a=蓝(一个人的精彩) / b=橙(生娃安家) */
+  table.mx th.col-w{background:#e8f1f4;color:var(--brand)}
+  table.mx th.col-a{background:#e9f1f9;color:var(--a)}
+  table.mx th.col-b{background:#fbeee6;color:var(--b)}
+  table.mx td.col-w{background:rgba(47,111,143,.04)}
+  table.mx td.col-a{background:rgba(59,130,196,.04)}
+  table.mx td.col-b{background:rgba(217,132,86,.04)}
+  input[type=range][data-f="w"]{accent-color:var(--brand)}
+  input[type=range][data-f="a"]{accent-color:var(--a)}
+  input[type=range][data-f="b"]{accent-color:var(--b)}
+  .liveage{display:inline-block;margin-left:8px;font-size:13px;color:var(--brand);font-weight:600}
+  /* annuity / item list */
+  .annrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+  .annrow select,.annrow input[type=number],.annrow input[type=text]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .annrow .at{color:var(--sub);font-size:12px}
+  /* 已有娃：可添加的孩子行 */
+  .ch-head{margin:0 0 10px;color:var(--sub);font-size:13px}
+  .childrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;transition:opacity .25s,transform .25s}
+  .childrow .seq{font-weight:700;color:var(--brand);background:var(--soft);border-radius:8px;padding:4px 10px;font-size:13px;white-space:nowrap}
+  .childrow .at{color:var(--sub);font-size:12px}
+  .childrow select,.childrow input[type=number]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .childrow.removing{opacity:0;transform:translateX(14px)}
+  .childrow.adding{opacity:0;transform:translateY(-6px)}
+  #addChild{margin-top:4px}
+  .itemrow .seq{font-weight:700;color:var(--brand);background:var(--soft);border-radius:8px;padding:4px 10px;font-size:13px;white-space:nowrap}
+  .itemrow .namelbl{font-size:12px;color:var(--sub);margin-right:2px}
+  .annlist{margin-top:10px}
+
+  /* ---------- 投资和被动收入模块 ---------- */
+  .inv-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 14px}
+  .inv-summary .kpi{padding:12px 14px}
+  .inv-summary .kpi .sub{font-size:11px;color:var(--sub);margin-top:2px}
+  .itemrow{border:1px solid var(--line);border-radius:12px;padding:0;overflow:hidden;margin-bottom:10px;background:#fff;transition:box-shadow .2s,transform .2s,opacity .25s}
+  .itemrow:hover{box-shadow:0 4px 14px rgba(31,41,51,.08)}
+  .itemrow.removing{opacity:0;transform:translateX(14px)}
+  .itemrow.adding{opacity:0;transform:translateY(-6px)}
+  .itemrow .ihead{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--soft);border-bottom:1px solid var(--line)}
+  .itemrow .ihead .rm{margin-left:auto}
+  .itemrow .seq{font-weight:700;color:var(--brand);background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 10px;font-size:13px;white-space:nowrap}
+  .itype{font-size:12px;font-weight:600;padding:3px 10px;border-radius:14px;background:#fff;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+  .itype.t-social{background:#e7f0f6;color:var(--brand);border-color:#cfe0ea}
+  .itype.t-ann{background:#e6f4ea;color:var(--pos);border-color:#cdeed5}
+  .itype.t-other{background:#fbf0dd;color:var(--warn);border-color:#f0e0c0}
+  .itemrow .ibody{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px}
+  .itemrow .seg{background:#fafbfc;border:1px dashed var(--line);border-radius:10px;padding:10px 12px}
+  .itemrow .seg-title{font-size:12px;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:6px}
+  .itemrow .seg-in .seg-title{color:var(--inv)}
+  .itemrow .seg-out .seg-title{color:var(--pass)}
+  .itemrow .seg-title::before{content:"";width:8px;height:8px;border-radius:50%}
+  .itemrow .seg-in .seg-title::before{background:var(--inv)}
+  .itemrow .seg-out .seg-title::before{background:var(--pass)}
+  .itemrow .fld{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+  .itemrow .fld>span{font-size:11.5px;color:var(--sub)}
+  .itemrow .fld-row{display:flex;gap:8px;flex-wrap:wrap}
+  .itemrow .fld-row .fld{flex:1;min-width:80px;margin-bottom:0}
+  .itemrow select,.itemrow input[type=number],.itemrow input[type=text]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:14px;width:100%}
+  .invest-empty{color:var(--sub);font-size:13px;padding:4px 0}
+
+  /* 投资可视化卡片 */
+  .invviz{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:14px}
+  .viz-block{background:#fafbfc;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .viz-title{font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+  .viz-title .badge{font-size:11px;font-weight:600;color:var(--pass);background:#e6f4ea;border-radius:10px;padding:2px 9px}
+  .chartbox{width:100%}
+  .chartbox svg{width:100%;height:auto;display:block}
+  .inv-chart .area{fill:var(--pass);opacity:0;transition:opacity .9s ease .2s}
+  .inv-chart.drawn .area{opacity:.14}
+  .inv-chart path.line{fill:none;stroke:var(--pass);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:2400;stroke-dashoffset:2400;transition:stroke-dashoffset 1.3s ease}
+  .inv-chart.drawn path.line{stroke-dashoffset:0}
+  .inv-chart .grid{stroke:var(--line);stroke-width:1}
+  .inv-chart .axis{fill:var(--sub);font-size:11px}
+  .inv-dist{display:flex;flex-direction:column;gap:12px}
+  .donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .donut{width:130px;height:130px;flex:0 0 130px}
+  .donut .bg{fill:none;stroke:var(--line);stroke-width:16}
+  .donut circle{fill:none;stroke-width:16;transition:stroke-dashoffset 1s ease}
+  .legend{display:flex;flex-direction:column;gap:7px;font-size:12.5px;flex:1;min-width:140px}
+  .legend .li{display:flex;align-items:center;gap:7px}
+  .legend .sw{width:11px;height:11px;border-radius:3px;flex:0 0 11px}
+  .legend .nm{color:var(--ink);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .legend .vl{color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dist-empty{color:var(--sub);font-size:13px}
+  .reveal{opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease}
+  .reveal.in{opacity:1;transform:none}
+  .livesub{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:10px}
+  .livesub .li label{font-size:12.5px;color:var(--sub);display:block;margin-bottom:4px}
+  .inline-note{font-size:12px;color:var(--sub);display:block;margin-top:6px}
+  /* grouped sub-items (Q1/Q2) */
+  .cgrp{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+  .cgrp .citem{min-width:210px}
+  .citem label{font-size:13px;color:var(--sub);display:block;margin-bottom:5px}
+  .citem label small{color:var(--sub);font-size:11px;margin-left:4px;font-weight:400}
+  .citem input[type=number],.citem select,.citem input[type=date]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  html{scroll-behavior:smooth;scroll-padding-top:72px}
+  /* focus & feedback (accessibility) */
+  input:focus-visible,select:focus-visible,button:focus-visible,input[type=range]:focus-visible,a:focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
+  .cond input:focus,.cond select:focus,.citem input:focus,.annrow input:focus,.annrow select:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(59,142,165,.15)}
+  /* results in-page navigator */
+  .resultnav{position:sticky;top:8px;z-index:20;display:flex;gap:8px;align-items:center;overflow-x:auto;padding:10px 12px;margin-bottom:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(31,41,51,.06);-webkit-overflow-scrolling:touch}
+  .resultnav .rn-label{font-size:12px;color:var(--sub);white-space:nowrap;font-weight:600}
+  .resultnav a{white-space:nowrap;text-decoration:none;font-size:13px;color:var(--sub);background:var(--soft);border:1px solid var(--line);padding:5px 12px;border-radius:18px;transition:.15s}
+  .resultnav a:hover{color:var(--brand);border-color:var(--brand2)}
+  .resultnav a.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  /* back to top */
+  #toTop{position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:50%;background:var(--brand);color:#fff;border:0;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(47,111,143,.35);opacity:0;pointer-events:none;transition:.2s;z-index:30}
+  #toTop.show{opacity:1;pointer-events:auto}
+  #toTop:hover{background:var(--brand2)}
+  /* ===== 问卷分区与进度导航 ===== */
+  .surveynav{position:sticky;top:8px;z-index:18;padding:10px 12px;margin-bottom:10px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(31,41,51,.06)}
+  .surveynav .sn-chips{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .surveynav .sn-chip{white-space:nowrap;text-decoration:none;font-size:13px;color:var(--sub);background:var(--soft);border:1px solid var(--line);padding:5px 12px;border-radius:18px;transition:.15s;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .surveynav .sn-chip:hover{color:var(--brand);border-color:var(--brand2)}
+  .surveynav .sn-chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .surveynav .sn-chip .tick{font-size:11px;opacity:0;transition:.2s}
+  .surveynav .sn-chip.done .tick{opacity:1;color:var(--pass)}
+  .surveynav .sn-chip.active .tick{color:#fff}
+  .surveynav .sn-foot{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .surveynav .sn-progress{flex:1;height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+  .surveynav .sn-fill{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:6px;transition:width .35s ease}
+  .surveynav .sn-pct{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* qgroup：分区容器 */
+  .qgroup{background:#fcfdfe;border:1px solid var(--line);border-radius:14px;padding:16px 18px 4px;margin:0 0 14px}
+  .qg-head{display:flex;align-items:center;gap:11px;margin:0 0 14px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+  .qg-num{flex:0 0 30px;width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(47,111,143,.28)}
+  .qg-title{font-size:16px;font-weight:700;color:var(--ink)}
+  .qg-desc{font-size:12.5px;color:var(--sub);margin-top:2px}
+  /* q：分区内问题（去虚线，改轻量） */
+  .q{border-bottom:0;margin:0 0 16px;padding:0;position:relative}
+  .q:last-child{margin-bottom:0}
+  .q .label{font-weight:700;font-size:15.5px;margin-bottom:10px;display:block;line-height:1.4}
+  .q .label small{font-weight:400;color:var(--sub);font-size:12px;display:block;margin:4px 0 0}
+  /* opt 选中态更明确 */
+  .opt span{transition:.15s}
+  .opt input:checked + span{box-shadow:0 2px 8px rgba(47,111,143,.28)}
+  @media(max-width:640px){.qgroup{padding:14px 13px 2px}.qg-head{flex-wrap:wrap;gap:8px}.qg-title{font-size:15px}.surveynav .sn-chip{font-size:12px;padding:5px 10px}.surveynav .sn-pct{font-size:11px}}
+  /* primary action feedback */
+  .btn{box-shadow:0 4px 12px rgba(47,111,143,.22)}
+  .btn:active{transform:translateY(1px)}
+  @media(max-width:640px){.card{padding:18px 15px}.citem,.cond .citem{min-width:140px}.cond input[type=number],.citem input[type=number],.citem select,.citem input[type=date],.annrow input[type=number],.annrow input[type=text]{width:100%}.resultnav{padding:8px 10px;gap:6px}.resultnav a{font-size:12px;padding:5px 10px}.inv-summary{grid-template-columns:repeat(2,1fr)}.invviz{grid-template-columns:1fr}.itemrow .ibody{grid-template-columns:1fr}.donut{width:110px;height:110px;flex-basis:110px}}
+  @media(max-width:460px){.inv-summary{grid-template-columns:1fr}.itemrow .ihead{flex-wrap:wrap}.donut-wrap{justify-content:center}}
+  @media(max-width:560px){.kpi .v{font-size:19px}.fin2,.total{grid-template-columns:1fr}header.top{padding:20px}}
+  /* 风险保障评估（第 10 部分 + 结果页） */
+  .risk-card{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-top:10px;background:#fff}
+  .risk-card:first-child{margin-top:4px}
+  .risk-name{font-weight:700;font-size:14.5px}
+  .risk-desc{color:var(--sub);font-size:12.5px;margin:5px 0 9px;line-height:1.5}
+  .risk-opts{display:flex;flex-wrap:wrap;gap:8px 16px}
+  .risk-opts .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+  .risk-opts .chk input{width:auto;margin:0}
+  .risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+  .risk-cell{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+  .risk-cell.ok{border-left:4px solid #2f9e6f}
+  .risk-cell.gap{border-left:4px solid #d9742f;background:#fff8f1}
+  .rc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+  .rc-name{font-weight:700;font-size:14px}
+  .rc-badge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .rc-badge.ok{background:#e6f4ec;color:#2f7d54;border:1px solid #bfe3cd}
+  .rc-badge.gap{background:#fdeede;color:#b9651f;border:1px solid #f3d2af}
+  .rc-desc{color:var(--sub);font-size:12px;margin-bottom:8px;line-height:1.5}
+  .rc-opts{display:flex;flex-wrap:wrap;gap:6px}
+  .rc-mems-mini{margin-top:8px;font-size:12px;color:#2f6f8f}
+  .tagmini{font-size:11.5px;background:var(--soft);color:var(--brand);border:1px solid #d4e3ea;border-radius:6px;padding:2px 8px}
+  .diag-box{margin-top:16px;border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#f8fbfd}
+  .diag-title{font-weight:700;font-size:15px;margin-bottom:4px}
+  .diag-item{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .diag-item:first-of-type{margin-top:10px;padding-top:0;border-top:none}
+  .diag-ctx{font-size:13px;color:var(--sub);margin:4px 0 8px;line-height:1.65}
+  .diag-list{margin:0;padding-left:18px}
+  .diag-list li{font-size:13px;line-height:1.7;margin:5px 0}
+  @media(max-width:640px){.risk-grid{grid-template-columns:1fr}}
+
+  /* ===== H5 / 移动端适配增强 ===== */
+  *{-webkit-tap-highlight-color:transparent}
+  @media(max-width:640px){
+    .wrap{padding-left:12px;padding-right:12px}
+    header.top p{font-size:13px;line-height:1.55}
+    /* 防 iOS 输入框聚焦自动放大：移动端字号提到 16px */
+    input,select,textarea{font-size:16px}
+    .citem,.cond .citem,.cgrp .citem{flex:1 1 100%;min-width:0}
+    .cond .crow .citem{flex:1 1 100%}
+    .annrow select,.annrow input[type=text],.childrow select,.childrow input[type=number]{width:100%}
+    .itemrow .fld-row .fld{flex:1 1 100%;min-width:0}
+    /* 宽表横向滚动，避免撑破页面 */
+    .stage-tbl{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+    table.tbl{font-size:11px}
+    table.mx{font-size:11.5px}
+    .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .chartbox{height:260px}
+    /* 主按钮与导航触摸友好 */
+    .survey-cta .actions{justify-content:center}
+    .survey-cta .btn{width:100%}
+    .opt span{padding:9px 14px}
+    .risk-opts{gap:8px 12px}
+    .resultnav a{padding:7px 12px}
+    .surveynav .sn-chip{padding:7px 12px}
+  }
+  @media(max-width:380px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .inv-summary{grid-template-columns:1fr}
+    .qg-title{font-size:14px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>人生财务 & 岔路决策器</h1>
+    <p>一份问卷，同时回答两件事：① 你的钱能撑到几岁、缺口在哪；② 站在生娃/自由的人生岔路口，按你真正在意的权重，哪条路更站得住。定量与定性在一张表里打通。</p>
+  </header>
+
+  <!-- ====== A. 财务测算问卷 ====== -->
+  <div class="card" id="survey">
+    <h2><span class="step">A</span>填写你的财务画像</h2>
+    <p class="hint">所有金额单位：万元人民币（除非特别标注）。看不懂的选项保持默认即可。</p>
+
+    <nav class="surveynav" id="surveynav" aria-label="问卷分区与填写进度">
+      <div class="sn-chips"></div>
+      <div class="sn-foot">
+        <div class="sn-progress"><div class="sn-fill"></div></div>
+        <span class="sn-pct">0%</span>
+      </div>
+    </nav>
+
+    <div class="qgroup" id="grp-1">
+      <div class="qg-head">
+        <span class="qg-num">1</span>
+        <div><div class="qg-title">基础与时间规划</div><div class="qg-desc">出生日期、退休年龄与测算终点</div></div>
+      </div>
+
+    <div class="q">
+      <span class="label">1. 个人基础与时间规划 <small>出生日期决定当前年龄；退休年龄后只靠被动收入；测算终点即财务寿命</small></span>
+      <div class="opts cgrp">
+        <div class="citem"><label>出生日期 <small>用于计算当前年龄</small></label>
+          <input type="date" id="dob" value="1990-06-15" max="2026-12-31" style="padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+          <span class="liveage" id="ageDisplay">—</span>
+        </div>
+        <div class="citem"><label>计划停止主动工作的年龄（退休）</label>
+          <select id="retireAge">
+            <option value="40">40 岁</option>
+            <option value="45">45 岁</option>
+            <option value="50">50 岁</option>
+            <option value="55">55 岁</option>
+            <option value="60" selected>60 岁</option>
+            <option value="65">65 岁</option>
+          </select>
+        </div>
+        <div class="citem"><label>想测算到多少岁（财务寿命终点）</label>
+          <select id="target">
+            <option value="75">75 岁</option>
+            <option value="80">80 岁</option>
+            <option value="85">85 岁</option>
+            <option value="90" selected>90 岁</option>
+            <option value="95">95 岁</option>
+          </select>
+        </div>
+        <div class="citem"><label>是否有配偶 <small>决定风险保障评估（第 10 部分）中是否出现「配偶」</small></label>
+          <select id="hasSpouse">
+            <option value="yes" selected>有配偶</option>
+            <option value="no">无配偶</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    </div><!--/grp-1-->
+
+    <div class="qgroup" id="grp-2">
+      <div class="qg-head">
+        <span class="qg-num">2</span>
+        <div><div class="qg-title">收入与资产投入</div><div class="qg-desc">当前资产与收益预期、劳动收入、一次性大额进账，以及各项投资与被动收入来源</div></div>
+      </div>
+
+    <div class="q">
+      <span class="label">2. 资产与收益预期</span>
+      <div class="opts cgrp">
+        <div class="citem"><label>当前可投资资产 <small>流动资产，不含自住房；测算起点本金</small></label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" id="assets" value="100" min="0" step="1" style="padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;width:160px">
+            <span style="color:var(--sub);font-size:13px">万元</span>
+          </div>
+        </div>
+        <div class="citem"><label>预期投资年化收益率 <small>保守建议 2%–3.5%</small></label>
+          <select id="ret">
+            <option value="0.02" selected>2%</option>
+            <option value="0.025">2.5%</option>
+            <option value="0.03">3%</option>
+            <option value="0.035">3.5%</option>
+            <option value="0.04">4%</option>
+            <option value="0.045">4.5%</option>
+            <option value="0.05">5%</option>
+            <option value="custom">5%+（自定义）</option>
+          </select>
+          <input type="number" id="retCustom" step="0.1" min="0" max="100" placeholder="自定义收益率（%）" style="display:none;margin-top:6px;width:100%">
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <span class="label">3. 收入规划 <small>选「暂时失业/不确定」按无新增收入算底线</small></span>
+      <div class="opts" data-name="incomeType">
+        <label class="opt"><input type="radio" name="incomeType" value="stable" checked><span>稳定工作</span></label>
+        <label class="opt"><input type="radio" name="incomeType" value="freelance"><span>自由职业 / 自雇</span></label>
+        <label class="opt"><input type="radio" name="incomeType" value="uncertain"><span>暂时失业 / 不确定</span></label>
+        <label class="opt"><input type="radio" name="incomeType" value="none"><span>无劳动收入 / 已退休</span></label>
+      </div>
+      <div class="cond" id="cond-income">
+        <div class="ch-head" id="wageHead">按年龄段填写<b>税后</b>工资收入（万/年）：系统逐年按你所处的年龄段取对应收入，退休后工资归零、只看被动收入。阶段划分见每行标签。<b>若配偶有收入，请并入此处按家庭口径填写</b>（本工具只测算一份家庭现金流，配偶不单独建模）。</div>
+        <div id="wageBands"></div>
+        <span class="inline-note">收入为<b>税后（到手）</b>口径，不含社保/公积金个人缴纳部分、不含投资或养老金等被动收入。<b>含配偶收入则按家庭合计口径填写</b>（配偶不再单独建模）。按每 5 岁一段填写（首个有收入段自你<b>当前年龄</b>起算，如 33–35、35–40 … 至 55 岁–退休前），数值为预填参考，请按你的真实情况改。若某年龄段无收入（如间隔年），填 0 即可；退休年龄之后自动归零仅算被动收入。</span>
+      </div>
+    </div>
+
+    <div class="q">
+      <span class="label">4. 投资和被动收入 <small>社保养老金 / 商业保险年金 / 各类投资均可；每项同时含「投入」与「收益」两段。可添加多项</small></span>
+      <div class="inv-summary" id="invSummary">
+        <div class="kpi"><div class="t">投资项数</div><div class="v" id="sumCount">0</div></div>
+        <div class="kpi"><div class="t">投资合计</div><div class="v" id="sumInv">0</div><div class="sub">万（累计投入）</div></div>
+        <div class="kpi"><div class="t">累计被动收入</div><div class="v pos" id="sumPass">0</div><div class="sub">万</div></div>
+      </div>
+      <div class="annlist" id="itemList"></div>
+      <button class="btn sm" id="addItem" type="button">+ 添加一项</button>
+      <span class="inline-note">每一项结构：投资名称（社保养老金 / 商业保险年金 / 其它，若其它请自填名称）+ 投资开始年份 + 投资年数 + 投资金额（万/年）→ 收益金额（万/年，2 位小数）+ 起领年份（绝对年份）+ 收益年数。收益统一按「万/年」计入被动收入；投入与收益各自按年份区间计入现金流。</span>
+    </div>
+
+    <div class="q">
+      <span class="label">5. 未来一次性大额进账 <small>继承 / 变现 / 补偿等，可添加多笔，分别填年份</small></span>
+      <div class="lump-list" id="lumpList"></div>
+      <button class="btn sm ghost" id="addLump" type="button">＋ 添加一笔进账</button>
+    </div>
+    </div><!--/grp-2-->
+
+    <div class="qgroup" id="grp-3">
+      <div class="qg-head">
+        <span class="qg-num">3</span>
+        <div><div class="qg-title">住房 · 生活 · 生育 · 赡养</div><div class="qg-desc">每年基本生活开支、居住安排、生育这条人生岔路的财务代价，以及父母的赡养支出</div></div>
+      </div>
+
+    <div class="q">
+      <span class="label">6. 每年基本生活开支（总数） <small>仅本人日常基本生活，单位 万/年；后续每年按 2% 递增</small></span>
+      <div class="opts">
+        <input type="number" id="dailyTotal" value="11" min="0" step="0.5" style="padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;width:180px">
+        <span style="align-self:center;color:var(--sub);font-size:13px">万元 / 年（当前水平）</span>
+      </div>
+      <span class="inline-note"><b>这里只填你本人的日常基本生活开支</b>，<b>不包含</b>：子女养育（第 8 部分「生育规划」单列）、住房 / 房贷 / 房租（第 7 部分「住房规划」单列）、父母赡养（第 9 部分「父母赡养」单列），也不含投资投入。计算规则：以填写的「当前年水平」为基准，之后每一年按 <b>2%</b> 自动递增（固定假设）。通常含：饮食餐饮、交通出行、医疗健康、服饰日用、休闲娱乐、人情交际、其他日常开销等。</span>
+    </div>
+
+    <div class="q">
+      <span class="label">7. 住房规划 <small>最大一项长期支出</small></span>
+      <div class="opts" data-name="housing">
+        <label class="opt"><input type="radio" name="housing" value="own"><span>已有房（无房贷）</span></label>
+        <label class="opt"><input type="radio" name="housing" value="ownLoan"><span>已有房（还贷中）</span></label>
+        <label class="opt"><input type="radio" name="housing" value="rent" checked><span>一直租房</span></label>
+        <label class="opt"><input type="radio" name="housing" value="buy"><span>计划购房</span></label>
+      </div>
+      <div class="cond" id="cond-ownLoan">
+        <div class="crow">
+          <div class="citem"><label>商贷余额（万）</label><input type="number" id="ownLoanCommBal" value="80" min="0" step="1"></div>
+          <div class="citem"><label>商贷利率（%，默认 3.10）</label><input type="number" id="ownLoanCommRate" value="3.10" step="0.05" min="0"></div>
+          <div class="citem"><label>公积金余额（万）</label><input type="number" id="ownLoanGjjBal" value="40" min="0" step="1"></div>
+          <div class="citem"><label>公积金利率（%，默认 2.85）</label><input type="number" id="ownLoanGjjRate" value="2.85" step="0.05" min="0"></div>
+        </div>
+        <div class="crow">
+          <div class="citem"><label>还贷结束年份</label><select id="loanEndYear"></select></div>
+          <div class="citem mp" id="ownMpDisplay">—</div>
+        </div>
+        <span class="inline-note">由「商贷余额 + 商贷利率」与「公积金余额 + 公积金利率」分别按等额本息、共享还贷结束年份计算；合计月供 = 商贷月供 + 公积金月供。提前还贷年份下拉随还贷结束年份收缩。</span>
+        <div class="ch-head" style="margin-top:12px">提前还贷规划（可选）：在指定年份一次性冲抵商贷或公积金本金；每笔可选择「减少还款年限（月供不变、提前结清）」或「保持还款年限（月供减少）」。可添加多笔。</div>
+        <div id="prepayListOwn"></div>
+        <button class="btn sm" id="addPrepayOwn" type="button">+ 添加提前还贷</button>
+      </div>
+      <div class="cond" id="cond-rent">
+        <div class="ch-head">一直租房 · 房租支出（并填一份购房预算，用于对比两条路）</div>
+        <div class="crow">
+          <div class="citem"><label>每月房租（万/月，保留 2 位小数）</label><input type="number" id="rentMonthly" value="0.50" min="0" step="0.01"></div>
+        </div>
+        <span class="inline-note">后续每年房租按 <b>2%</b> 递增（固定假设）。下方「购房预算」请一并填写——系统用它对比「一直租房」与「计划购房」的财务缺口；这笔预算只用于对比，不影响你实际按房租支出的测算。</span>
+      </div>
+      <div class="cond" id="cond-buy">
+        <div class="ch-head">购房预算（两种选择都填，用于对比两条路）：无论你选「一直租房」还是「计划购房」，都填这份购房方案。系统对比「一直租房 vs 计划购房」的财务缺口——这里填的预算只参与对比，不改变你实际选择的居住方式测算。</div>
+        <div class="crow">
+          <div class="citem"><label>计划购房总额（万）</label><input type="number" id="buyTotal" value="500" min="0"></div>
+          <div class="citem"><label>首付（万）</label><input type="number" id="downPayment" value="200" min="0"></div>
+          <div class="citem"><label>公积金贷款（万）</label><input type="number" id="loanGjj" value="100" min="0"></div>
+          <div class="citem"><label>商业贷款（万）</label><input type="number" id="loanComm" value="200" min="0"></div>
+          <div class="citem"><label>贷款年限</label>
+            <select id="loanYears"><option value="20">20 年</option><option value="30" selected>30 年</option></select>
+          </div>
+          <div class="citem"><label>计划购房年份</label><select id="buyYear"></select></div>
+        </div>
+        <div class="crow" style="margin-top:6px">
+          <div class="citem"><label>公积金贷款年利率（%，默认 2.85）</label><input type="number" id="gjjRate" value="2.85" step="0.05" min="0"></div>
+          <div class="citem"><label>商业贷款年利率（%，默认 3.10）</label><input type="number" id="commRate" value="3.10" step="0.05" min="0"></div>
+        </div>
+        <div class="cond" id="cond-buyPreRent">
+          <div class="crow" style="margin-top:6px">
+            <div class="citem" style="min-width:240px"><label>购房前每月租金（万/月）<small>购房前过渡期租金（仅计划购房时填写；购房前年份按此计支出）</small></label><input type="number" id="preBuyRent" value="0.50" min="0" step="0.01"></div>
+          </div>
+        </div>
+        <div class="mp" id="mpDisplay">—</div>
+        <span class="inline-note">贷款利率备注：以上为 2026 年首套参考利率（公积金约 2.85%、商贷约 3.10%），可手动修改；月供按等额本息、公积金与商贷分别计息后相加。购房前年份按「购房前租金」计支出，购房当年付首付，之后还贷期按月供×12 计。</span>
+        <div class="cond" id="cond-buyPrepay">
+          <div class="ch-head" style="margin-top:12px">提前还贷规划（可选，仅计划购房时填写）：在指定年份一次性冲抵「商贷」或「公积金贷款」本金；每笔可选择「减少还款年限（月供不变、提前结清）」或「保持还款年限（月供减少）」。可添加多笔。</div>
+          <div id="prepayList"></div>
+          <button class="btn sm" id="addPrepay" type="button">+ 添加提前还贷</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <span class="label">8. 生育规划 · 人生岔路 <small>选你的选择；选生娃则填写每个娃的养育计划，选不生娃则系统用参考值自动对比</small></span>
+      <div class="opts" data-name="planChildren">
+        <label class="opt"><input type="radio" name="planChildren" value="no" checked><span>不生娃</span></label>
+        <label class="opt"><input type="radio" name="planChildren" value="yes"><span>生娃</span></label>
+      </div>
+      <div class="cond" id="cond-children">
+        <div class="ch-head">生娃：可添加多个孩子（已有娃再生、或当前计划生都行），每个孩子单独算抚养窗口与费用计划。每个娃的养育支出按「分年龄段参考值」自行填写，已出生的娃从当前岁数起算。</div>
+        <div id="childList"></div>
+        <button class="btn sm" id="addChild" type="button">+ 添加孩子</button>
+        <div class="crow" style="margin-top:14px">
+          <div class="citem"><label>生育导致收入中断损失（万，一次性，可选；每个娃出生当年计入）</label><input type="number" id="childLoss" value="0" min="0" step="1" style="width:130px"></div>
+        </div>
+        <span class="inline-note">每个孩子按出生年份进入对应年龄阶段，养育支出取你填写的「万/年」值计入该年（孕产阶段含备孕 / 出生当年，到研究生阶段 25 岁后归零）；已出生的娃只从当前岁数起算后续阶段。多娃时逐娃分别计算并累加。收入中断损失在每个娃出生当年一次性计入（已出生娃的出生年已过，自然不再计入）。结果页会自动用「生娃路径」对比「不生娃路径」。</span>
+      </div>
+      <div class="cond" id="cond-childref">
+        <div class="ch-head">你选了「不生娃」，<b>无需填写育儿计划</b>。系统将按下方<b>参考值</b>自动构建「生 1 个孩子」的情景，对比生娃 vs 不生娃的财务代价（仅用于对比，不影响你实际按不生娃测算）。</div>
+        <table class="stage-tbl"><thead><tr><th>年龄段</th><th>参考费用（万/年）</th></tr></thead><tbody id="childRefBody"></tbody></table>
+        <span class="inline-note">参考情景：生 1 个孩子（次年出生），各年龄段费用取下表「参考（万/年）」；生育收入中断损失按 <b>0</b> 计（仅参考，不代表真实情况）。若想用其它生娃假设，请选「生娃」并自行填写每娃的养育计划。</span>
+      </div>
+    </div>
+
+    <div class="q">
+      <span class="label">9. 父母赡养规划 <small>逐位父母单独填写，按「父母年龄」分段计算，默认算到父母 90 岁</small></span>
+      <div class="opts" data-name="planParents">
+        <label class="opt"><input type="radio" name="planParents" value="yes" checked><span>需要赡养父母</span></label>
+        <label class="opt"><input type="radio" name="planParents" value="no"><span>暂无赡养支出</span></label>
+      </div>
+      <div class="cond" id="cond-parents">
+        <div class="ch-head">可添加多位长辈（父亲、母亲、配偶父母等），每位单独算。赡养支出按<b>父母年龄</b>分段：退休前/刚退休 → 60–69 → 70–79 → 80 岁以上，越往后医疗自费与照护支出越高。</div>
+        <div id="parentList"></div>
+        <button class="btn sm" id="addParent" type="button">+ 添加长辈</button>
+        <div id="parentHint" class="inline-note" style="margin-top:10px"></div>
+        <span class="inline-note">计算规则：每位长辈按「当前年 − 出生年」落到对应年龄段，取你填写的「万/年」计入当年支出；到了你填的<b>赡养截止年龄</b>（默认 90 岁）即停止。赡养支出<b>不随生活开支通胀递增</b>（各段数值已含医疗费上涨预期），如需上调请直接改各段金额。默认已预置父亲（1960 年）与母亲（1962 年）两位，请按实际出生年份与金额修改；不需要的长辈点「删除」。</span>
+      </div>
+    </div>
+
+    </div><!--/grp-3-->
+
+    <div class="qgroup" id="grp-4">
+      <div class="qg-head">
+        <span class="qg-num">4</span>
+        <div><div class="qg-title">风险保障评估</div><div class="qg-desc">按家庭成员勾选已配置的保险——留空即潜在缺口</div></div>
+      </div>
+
+    <div class="q">
+      <span class="label">10. 风险保障评估 <small>按家庭成员（本人 / 配偶 / 子女 / 父母）勾选已配置的险种；结果页会按成员汇总并分析缺口</small></span>
+      <div id="riskList"></div>
+      <div class="citem" style="margin-top:12px">
+        <label>其他担忧 / 备注（可选）</label>
+        <input type="text" id="worry" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px" placeholder="例如：失业太久、老了没人管、钱不够花……">
+      </div>
+    </div>
+    </div><!--/grp-4-->
+
+    <div class="survey-cta">
+      <div class="actions">
+        <button class="btn" id="run">生成测算 & 决策</button>
+        <span class="err" id="err"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 结果区 ====== -->
+  <div id="results" style="display:none">
+    <nav class="resultnav" id="resultnav" aria-label="结果快速导航">
+      <span class="rn-label">快速跳转</span>
+      <a href="#sec-core" data-sec>核心指标</a>
+      <a href="#sec-invest" data-sec>投资可视化</a>
+      <a href="#sec-traj" data-sec>余额轨迹</a>
+      <a href="#sec-gap" data-sec>缺口结论</a>
+      <a href="#sec-stress" data-sec>压力测试</a>
+      <a href="#sec-decision" data-sec>决策对照</a>
+      <a href="#homefork" data-sec>买房对照</a>
+      <a href="#sec-synth" data-sec>综合结论</a>
+      <a href="#sec-risk" data-sec>风险保障</a>
+    </nav>
+
+    <div class="card" id="sec-core">
+      <h2 class="flex-head"><span class="step">A</span>核心指标<span id="kpisTag" class="sect-tag"></span></h2>
+      <p class="hint" id="summary-line"></p>
+      <div class="kpis" id="kpis"></div>
+    </div>
+
+    <div class="card reveal" id="sec-invest">
+      <h2><span class="step">A</span>投资与被动收入 · 可视化</h2>
+      <p class="hint">把「投资和被动收入」模块量化成图：被动收入随时间的增长趋势、各来源贡献占比，以及核心收益指标。数据均取自你填写的投资项，不影响测算逻辑。</p>
+      <div class="kpis" id="inv-kpis"></div>
+      <div class="invviz">
+        <div class="viz-block">
+          <div class="viz-title">被动收入趋势（万/年）<span class="badge" id="invPeak">—</span></div>
+          <div class="chartbox" id="invTrend"></div>
+        </div>
+        <div class="viz-block">
+          <div class="viz-title">收益来源分布<span class="badge" style="color:var(--brand);background:var(--soft)">累计占比</span></div>
+          <div class="inv-dist" id="invDist"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="sec-traj">
+      <h2><span class="step">A</span>逐年余额轨迹</h2>
+      <p class="hint">纵轴为当年末流动资产余额（万元），跌破 0 即该年起资金见底。</p>
+      <div class="chartbox"><canvas id="chart"></canvas></div>
+      <div class="scroll" style="margin-top:14px"><table class="tbl" id="tbl"></table></div>
+    </div>
+
+    <div class="card" id="sec-gap">
+      <h2><span class="step">A</span>缺口分析与结论</h2>
+      <div class="verdict" id="verdict"></div>
+    </div>
+
+    <div class="card" id="sec-stress">
+      <h2><span class="step">A</span>情景压力测试</h2>
+      <p class="hint">同一计划下，扰动「收益率与开支」假设看终点摆幅——这是你的安全垫对假设的敏感度。</p>
+      <div class="kpis" id="cmp"></div>
+      <div class="verdict" id="cmp-note" style="margin-top:12px"></div>
+    </div>
+
+    <!-- ====== B. 决策对照 ====== -->
+    <div class="card" id="sec-decision">
+      <h2><span class="step">B</span>生娃与否 · 财务代价对照</h2>
+      <div class="hintbox">💡 这不是算命，是帮你把"纠结"摊开。无论你在问卷里选「不生娃」还是「生娃」，这里都对比两条路径的终点：<b>生娃路径 vs 不生娃路径</b>——这是你人生岔路的量化代价（纯财务视角，不含主观价值偏好）。</div>
+
+      <div class="layer">
+        <div class="layer-head"><span class="layer-no">①</span>财务代价：生娃让终点差多少</div>
+        <p class="hint">同一套输入下，把「生娃」与「不生娃」互换，看财务终点的差别——这是你人生岔路的量化代价。</p>
+        <div class="kpis" id="childfork-kpis"></div>
+        <div class="notebox" id="childfork-note"></div>
+      </div>
+    </div>
+
+    <div class="card" id="homefork" style="display:none">
+      <h2><span class="step">B</span>买房与否 · 决策对照</h2>
+      <p class="hint">同一套输入下，把「购房」与「一直租房」互换，看财务终点的差别——这是你住房岔路的量化代价（模型不含房产净值，纯看现金流）。</p>
+      <div class="kpis" id="homefork-kpis"></div>
+      <div class="notebox" id="homefork-note"></div>
+    </div>
+
+    <!-- ====== C. 综合结论 ====== -->
+    <div class="card" id="sec-synth">
+      <h2><span class="step">C</span>综合结论</h2>
+      <div class="verdict" id="synthesis"></div>
+    </div>
+
+    <div class="card" id="sec-risk">
+      <h2><span class="step">C</span>风险保障评估</h2>
+      <p class="hint">结合你勾选的保障与前面的财务测算（收入 / 负债 / 开支 / 缺口年份），给出各成员保障的诊断、优先顺序与参考保额。</p>
+      <div id="risk"></div>
+    </div>
+
+    <div class="card">
+      <h2>方法论</h2>
+      <ul class="method">
+        <li><b>底线思维：</b>先算「没有任何新增收入」的最保守情形，看本金+被动收入能撑多久——是安全垫不是预测。</li>
+        <li><b>逐年现金流递推：</b>期末=期初+理财收益(期初×年化)+主动收入+被动收入(投资项)−支出，次年接续、复利自然产生。</li>
+        <li><b>定量→定性打通：</b>财务测算终点，映射为决策矩阵「财务安全」维度的基线分，账本结论直接进入人生取舍。</li>
+        <li><b>缺口三指标：</b>首次转负年 / 窗口最低点 / 目标年龄终点（盈余或缺口）。</li>
+        <li><b>压力测试：</b>同一计划下扰动收益率与开支，看终点摆幅，提示安全垫对假设的敏感度。</li>
+        <li><b>只算钱不算生活：</b>模型不含陪伴、自由、意义感等维度，故必须配合 B 部分加权决策——数字揭示代价，不替你选人生。</li>
+        <li><b>务实不夸大：</b>给的是风险日历与缺口量级，不是事件剧本；参数均为估算，结论随输入变化。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>输入假设回执</h2>
+      <div class="scroll"><table class="tbl" id="assump" style="font-size:12.5px"></table></div>
+      <div class="actions" style="margin-top:14px"><button class="btn ghost" id="back">修改答案</button></div>
+    </div>
+    <div class="foot">本工具为个人规划辅助，所有数字基于你的估算输入，不构成投资建议。模型仅反映流动性，不含房产净值、税务、通胀对购买力的侵蚀等复杂因素。</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  // ===== 问卷分区导航 + 填写进度 =====
+  function groupComplete(id){
+    const v = id2 => { const e=document.getElementById(id2); return e?String(e.value).trim():''; };
+    if(id==='grp-1'){ return v('dob')!=='' && v('retireAge')!=='' && v('target')!==''; }
+    if(id==='grp-2'){ const list=document.getElementById('itemList'); if(!(v('assets')!=='' && v('ret')!=='' && list && list.children.length>0)) return false; if($('#ret').value==='custom'){ return v('retCustom')!==''; } return true; }
+    if(id==='grp-3'){
+      const h=(document.querySelector('input[name=housing]:checked')||{}).value; if(!h) return false;
+      if(h==='buy' || h==='rent'){
+        if(!v('buyTotal')||!v('downPayment')||!v('loanGjj')||!v('loanComm')||!v('buyYear')) return false;
+        if(h==='rent'){ if(!v('rentMonthly')) return false; }
+      }
+      else if(h==='ownLoan'){ if((!v('ownLoanCommBal') && !v('ownLoanGjjBal')) || !v('loanEndYear')) return false; }
+      const c=(document.querySelector('input[name=planChildren]:checked')||{}).value;
+      if(c==='yes'){ const rows=$$('#childList .childrow'); if(rows.length===0) return false; for(const r of rows){ if(!r.querySelector('.cyear').value) return false; } }
+      return v('dailyTotal')!=='';
+    }
+    if(id==='grp-4'){
+      const rows=$$('#lumpList .lumprow');
+      if(rows.length===0) return true; // 允许无进账
+      for(const r of rows){ if(!r.querySelector('.lamt').value||!r.querySelector('.lyear').value) return false; }
+      return true;
+    }
+    return false;
+  }
+  function setupSurveyNav(){
+    const groups=[{id:'grp-1',label:'基础与时间'},{id:'grp-2',label:'收入与资产'},{id:'grp-3',label:'生活·住房·赡养'},{id:'grp-4',label:'风险保障评估'}];
+    const nav=document.getElementById('surveynav'); if(!nav) return;
+    const chipsWrap=nav.querySelector('.sn-chips'), fill=nav.querySelector('.sn-fill'), pct=nav.querySelector('.sn-pct');
+    const chips=groups.map(g=>{
+      const a=document.createElement('a'); a.className='sn-chip'; a.href='#'+g.id; a.dataset.gid=g.id;
+      a.innerHTML='<span class="tick">✓</span>'+g.label;
+      a.addEventListener('click',e=>{ e.preventDefault(); const el=document.getElementById(g.id); if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'start'}); });
+      chipsWrap.appendChild(a); return a;
+    });
+    if(typeof IntersectionObserver!=='undefined'){
+      const obs=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ chips.forEach(c=>c.classList.toggle('active', c.dataset.gid===e.target.id)); } }); }, {rootMargin:'-45% 0px -50% 0px'});
+      groups.forEach(g=>{ const el=document.getElementById(g.id); if(el) obs.observe(el); });
+    }
+    function updateDone(){
+      let done=0;
+      groups.forEach((g,i)=>{ const ok=groupComplete(g.id); chips[i].classList.toggle('done',ok); if(ok) done++; });
+      const p=Math.round(done/groups.length*100);
+      fill.style.width=p+'%'; if(pct) pct.textContent=p+'%';
+    }
+    const survey=document.getElementById('survey');
+    survey.addEventListener('input',updateDone);
+    survey.addEventListener('change',updateDone);
+    updateDone();
+  }
+
+  function init(){
+
+  // ---- 条件显示 ----
+  function bindCond(name, condId, showWhen){
+    const show = () => { const v=(document.querySelector('input[name="'+name+'"]:checked')||{}).value; document.getElementById(condId).classList.toggle('show', showWhen.indexOf(v)>=0); };
+    $$('input[name="'+name+'"]').forEach(r=>r.addEventListener('change', show)); show();
+  }
+  bindCond('incomeType','cond-income',['stable','freelance']);
+  bindCond('housing','cond-ownLoan',['ownLoan']);
+  bindCond('housing','cond-rent',['rent']);
+  bindCond('housing','cond-buy',['rent','buy']);
+  bindCond('housing','cond-buyPreRent',['buy']);
+  bindCond('housing','cond-buyPrepay',['buy']);
+  bindCond('planChildren','cond-children',['yes']);
+  bindCond('planChildren','cond-childref',['no']);
+  bindCond('planParents','cond-parents',['yes']);
+  // 收益率自定义：选「5%+（自定义）」时显示输入框
+  $('#ret').addEventListener('change', function(){
+    const isCustom = this.value==='custom';
+    $('#retCustom').style.display = isCustom ? 'block' : 'none';
+    if(!isCustom) $('#retCustom').value='';
+  });
+
+  // 收入标签随类型变化
+  document.querySelectorAll('input[name="incomeType"]').forEach(r=>r.addEventListener('change',()=>{
+    const t=(document.querySelector('input[name="incomeType"]:checked')||{}).value;
+    $('#wageHead').innerHTML = (t==='freelance'
+      ? '按年龄段填写<b>税后</b>预计年收入（万/年，自由职业收入波动较大，可取近 3–5 年均值）：系统逐年按你所处的年龄段取对应收入，退休后归零、只看被动收入。阶段划分见每行标签。'
+      : '按年龄段填写<b>税后</b>工资收入（万/年）：系统逐年按你所处的年龄段取对应收入，退休后工资归零、只看被动收入。阶段划分见每行标签。');
+  }));
+
+  // ---- 年龄实时计算 ----
+  function computeAge(){ const d=$('#dob').value; if(!d){$('#ageDisplay').textContent='请填写出生日期';return null;} const a=FPEngine.ageFromDob(d,new Date()); if(a==null||a<0||a>120){$('#ageDisplay').textContent='日期无效';return null;} $('#ageDisplay').textContent='当前 '+a+' 岁'; return a; }
+  $('#dob').addEventListener('change',()=>{ computeAge(); renderWageBands(); });
+  $('#retireAge').addEventListener('change',renderWageBands);
+  computeAge();
+
+  // ---- 购房月供实时计算 ----
+  function updateMonthly(){
+    const gjj=parseFloat($('#loanGjj').value)||0, comm=parseFloat($('#loanComm').value)||0;
+    const yrs=parseInt($('#loanYears').value)||30;
+    const gr=(parseFloat($('#gjjRate').value)||0)/100, cr=(parseFloat($('#commRate').value)||0)/100;
+    const m=FPEngine.monthlyMortgage(gjj,gr,yrs)+FPEngine.monthlyMortgage(comm,cr,yrs);
+    if(m<=0){ $('#mpDisplay').textContent='（无贷款，月供为 0）'; return; }
+    $('#mpDisplay').textContent='月供 ≈ '+m.toFixed(2)+' 万/月（≈ '+Math.round(m*10000).toLocaleString()+' 元/月），年供 ≈ '+(m*12).toFixed(2)+' 万/年';
+  }
+  ['loanGjj','loanComm','loanYears','gjjRate','commRate'].forEach(id=>$('#'+id).addEventListener('input',updateMonthly)); updateMonthly();
+
+  // ---- 已有房（还贷中）月供实时计算（商贷 + 公积金 拆分）----
+  function updateOwnMp(){
+    const cb=parseFloat($('#ownLoanCommBal').value)||0, gb=parseFloat($('#ownLoanGjjBal').value)||0;
+    const y0=new Date().getFullYear();
+    const endY=parseInt($('#loanEndYear').value)||(y0+30);
+    const term=Math.max(0,(endY-y0)+1);
+    const cr=(parseFloat($('#ownLoanCommRate').value)||0)/100, gr=(parseFloat($('#ownLoanGjjRate').value)||0)/100;
+    if((cb<=0 && gb<=0) || term<=0){ $('#ownMpDisplay').textContent='—'; return; }
+    const cm=FPEngine.monthlyMortgage(cb,cr,term), gm=FPEngine.monthlyMortgage(gb,gr,term);
+    const m=cm+gm;
+    const bal=(cb+gb).toFixed(0);
+    $('#ownMpDisplay').innerHTML='合计月供 ≈ <b>'+m.toFixed(2)+'</b> 万/月（商贷 '+cm.toFixed(2)+' + 公积金 '+gm.toFixed(2)+'），年供 ≈ '+(m*12).toFixed(2)+' 万/年；当前贷款余额 '+bal+' 万';
+  }
+  ['ownLoanCommBal','ownLoanCommRate','ownLoanGjjBal','ownLoanGjjRate','loanEndYear'].forEach(id=>$('#'+id).addEventListener('input',updateOwnMp)); updateOwnMp();
+
+  // ---- 风险保障评估：按家庭成员勾选已配置的险种 ----
+  const INSURANCE_TYPES = [
+    {key:'social',    name:'社保（基本医保 / 养老）', desc:'国家基础保障：基本医保 + 基本养老保险'},
+    {key:'accident',  name:'意外险',                 desc:'意外身故 / 伤残 / 意外医疗'},
+    {key:'medical',   name:'医疗险（百万医疗等）',   desc:'报销型，覆盖大额住院与社保外用药'},
+    {key:'critical',  name:'重大疾病险',             desc:'确诊即一次性给付，覆盖治疗费 + 收入中断'},
+    {key:'care',      name:'长期护理险',             desc:'失能 / 失智长期照护'},
+    {key:'saving',    name:'教育金 / 养老金',        desc:'储蓄型：子女教育金 或 本人/配偶养老'},
+    {key:'life',      name:'终身寿险',               desc:'身故赔付 + 传承 / 身价保障'},
+  ];
+  // 已勾选险种缓存（按成员 key 保存，刷新成员列表时不丢勾选）
+  const riskSelections = {};
+  // 动态家庭成员：本人 + 配偶(如有) + 孩子(若选生娃，按 childList) + 长辈(若选赡养，按称呼)
+  function currentFamilyMembers(){
+    const members = [{key:'self', label:'本人'}];
+    if(($('#hasSpouse')||{}).value === 'yes') members.push({key:'spouse', label:'配偶'});
+    if(val('planChildren')==='yes'){
+      $$('#childList .childrow').forEach((r,i)=>{ members.push({key:'child-'+i, label:'孩子'+(i+1)}); });
+    }
+    if(val('planParents')==='yes'){
+      const seen={};
+      $$('#parentList .parentrow').forEach((r,i)=>{
+        let lab=(r.querySelector('.plabel')||{}).value || '长辈';
+        if(seen[lab]){ seen[lab]++; lab=lab+seen[lab]; } else seen[lab]=1;
+        members.push({key:'parent-'+i, label:lab});
+      });
+    }
+    return members;
+  }
+  function renderRiskList(){
+    const list=$('#riskList'); if(!list) return; list.innerHTML='';
+    currentFamilyMembers().forEach(m=>{
+      const card=document.createElement('div'); card.className='risk-card'; card.dataset.member=m.key; card.dataset.label=m.label;
+      const sel=riskSelections[m.key]||{};
+      const chips = INSURANCE_TYPES.map(t=>`<label class="chk" title="${t.desc}"><input type="checkbox" class="ropt" data-ins="${t.key}" ${sel[t.key]?'checked':''}> ${t.name}</label>`).join('');
+      card.innerHTML=`<div class="risk-head"><span class="risk-name">${m.label}</span></div>
+        <div class="risk-desc">勾选该成员已配置的险种（悬停可看说明），未勾选即视为缺口。</div>
+        <div class="risk-opts">${chips}</div>`;
+      card.querySelectorAll('.ropt').forEach(inp=>{
+        inp.addEventListener('change',()=>{ riskSelections[m.key]=riskSelections[m.key]||{}; riskSelections[m.key][inp.dataset.ins]=inp.checked; });
+      });
+      list.appendChild(card);
+    });
+  }
+  renderRiskList();
+
+  // ---- 年份下拉：统一填充（当前年 ~ 当前+50）----
+  function fillYearSelect(sel, def, startYear){
+    const y0 = (typeof startYear === 'number') ? startYear : new Date().getFullYear();
+    for(let i=0;i<=50;i++){ const o=document.createElement('option'); o.value=y0+i; o.textContent=(y0+i)+' 年'; if((def||y0)===y0+i) o.selected=true; sel.appendChild(o); }
+  }
+  // 静态年份下拉（购房年份 / 还贷结束年份 / 一次性进账年份）
+  fillYearSelect($('#buyYear'), new Date().getFullYear());
+  fillYearSelect($('#loanEndYear'), new Date().getFullYear()+30);
+
+  // ---- 分年龄段养育支出阶段表（参考值，万/年；按每个娃单独填写）----
+  const CHILD_STAGE_DEFS = [
+    {key:'prenatal', name:'孕产阶段',  age:'备孕 + 出生当年', from:-1, to:0,  def:4.8},
+    {key:'infant',   name:'幼儿阶段',  age:'1–3 岁',         from:1,  to:3,  def:3.6},
+    {key:'kinder',   name:'幼儿园阶段', age:'4–6 岁',         from:4,  to:6,  def:3.0},
+    {key:'primary',  name:'小学阶段',  age:'7–12 岁',        from:7,  to:12, def:2.4},
+    {key:'junior',   name:'初中阶段',  age:'13–15 岁',       from:13, to:15, def:3.0},
+    {key:'senior',   name:'高中阶段',  age:'16–18 岁',       from:16, to:18, def:3.6},
+    {key:'college',  name:'大学阶段',  age:'19–22 岁',       from:19, to:22, def:4.8},
+    {key:'grad',     name:'研究生阶段', age:'23–25 岁',       from:23, to:25, def:4.8},
+  ];
+  // 已出生娃：默认参考阶段（全段，作为引擎回退）
+  const DEFAULT_KID_STAGES = CHILD_STAGE_DEFS.map(d=>({from:d.from, to:d.to, annual:d.def}));
+
+  // ---- 工资按年龄段分段（职业阶段，连续覆盖 22→退休，无空档）----
+  // 分段：按每 5 岁一段，从 22 岁到退休前（55 岁起为临近退休段），连续无空档；相邻段边界左闭右开（如 25 岁计入「25–30」段）。
+  const SALARY_BANDS = [
+    {from:22, to:25,  label:'职场起步期', def:12},
+    {from:25, to:30,  label:'职场起步期', def:15},
+    {from:30, to:35,  label:'事业成长期', def:18},
+    {from:35, to:40,  label:'事业成长期', def:25},
+    {from:40, to:45,  label:'收入高峰期', def:30},
+    {from:45, to:50,  label:'收入高峰期', def:35},
+    {from:50, to:55,  label:'职业后期',  def:33},
+    {from:55, to:120, label:'临近退休',  def:28},
+  ];
+  // 渲染税后工资按年龄段的填写表：仅展示与 [当前年龄, 退休年龄] 相交的段
+  function renderWageBands(){
+    const box = $('#wageBands'); if(!box) return;
+    const ca = computeAge(); const curAge = (ca==null||ca<0)?37:ca;
+    const ret = parseInt($('#retireAge').value)||60;
+    // 仅保留与 (当前年龄, 退休年龄] 相交的段；并把首个相交段裁剪到「从当前年龄起算」，
+    // 这样收入规划的真实起始年龄 = 当前年龄（而非固定的职业段起点）。
+    const shown = SALARY_BANDS.filter(b=> b.to > curAge && b.from <= ret)
+      .map(b=>{ const f=Math.max(b.from, curAge); return (f < b.to) ? Object.assign({}, b, {from:f}) : null; })
+      .filter(Boolean);
+    if(!shown.length){ box.innerHTML='<div class="stage-head">当前年龄已到 / 超过退休年龄，无需填写在职工资。</div>'; return; }
+    const rowsHtml = shown.map((b,i)=>{
+      const rangeLab = (b.to>99) ? (b.from+' 岁–退休前') : (b.from+'–'+b.to+' 岁');
+      const lab = rangeLab+' · '+b.label;
+      const note = (i===0 && b.from===curAge) ? ` <span class="age">（自当前 ${curAge} 岁起算）</span>` : '';
+      return `<tr><td>${lab}${note}</td><td><input type="number" id="wb_${i}" class="wb" data-from="${b.from}" data-to="${b.to}" min="0" step="0.5" value="${b.def}"> 万/年</td></tr>`;
+    }).join('');
+    box.innerHTML = `<table class="stage-tbl"><thead><tr><th>年龄段 · 职业阶段</th><th>税后工资收入（万/年）</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  }
+  // 初始渲染税后工资分段表（此刻 SALARY_BANDS 已初始化）
+  renderWageBands();
+
+  // ---- 动态：生娃可逐个添加孩子（出生年覆盖过去与未来）----
+  function fillChildYearSelect(sel, def){
+    const y0 = new Date().getFullYear();
+    for(let off=50; off>=-35; off--){ const y=y0+off; const label = off>0 ? (y+' 年（'+off+' 年后计划）') : (off<0 ? (y+' 年（现 '+Math.abs(off)+' 岁）') : (y+' 年（今年）')); const o=document.createElement('option'); o.value=y; o.textContent=label; if((def||y0+1)===y) o.selected=true; sel.appendChild(o); }
+  }
+  function renumberChildren(){ $$('#childList .childrow').forEach((r,i)=>{ r.querySelector('.seq').textContent='娃 '+(i+1); }); }
+  // 渲染单个娃的分年龄段费用计划：已出生娃只显示「当前岁数起」的阶段
+  function renderKidStages(row){
+    const box=row.querySelector('.kidstages'); if(!box) return;
+    const y0=new Date().getFullYear();
+    const by=parseInt(row.querySelector('.cyear').value)||y0;
+    const curAge = by<=y0 ? (y0-by) : -1; // 已出生=当前岁数；计划生=-1
+    const shown = CHILD_STAGE_DEFS.filter(d=> d.to >= curAge);
+    const rowsHtml = shown.map(d=>{
+      const lab = (curAge>0 && d.from < curAge) ? (curAge+'–'+d.to+' 岁（本阶段剩余）') : d.age;
+      return `<tr><td>${d.name}</td><td class="age">${lab}</td><td class="ref">~${d.def}</td><td><input type="number" class="kstage" data-key="${d.key}" min="0" step="0.1" placeholder="填此处"> 万/年</td></tr>`;
+    }).join('');
+    const title = curAge>0 ? `（已出生，当前 ${curAge} 岁，费用计划从当前岁数起算）` : '（计划出生，从孕产阶段起算）';
+    box.innerHTML = `<div class="stage-head" style="margin-top:0">分年龄段养育支出${title}（参考值仅展示，请在「您的填写」列按实际填）</div><table class="stage-tbl"><thead><tr><th>阶段</th><th>年龄区间</th><th>参考值(万/年)</th><th>您的填写(万/年)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  }
+  function childRow(){
+    const row=document.createElement('div'); row.className='childrow';
+    row.innerHTML=`<span class="seq">娃 1</span>
+      <span class="at">出生年份</span><select class="cyear"></select>
+      <span class="at">抚养年数上限（可选，留空=到研究生阶段 25 岁）</span><input type="number" class="cyrs" value="0" min="0" step="1" style="width:130px">
+      <button class="btn sm ghost rm" type="button">删除</button>
+      <div class="kidstages" style="flex-basis:100%;margin-top:8px"></div>`;
+    fillChildYearSelect(row.querySelector('.cyear'), new Date().getFullYear()+1);
+    renderKidStages(row);
+    row.querySelector('.cyear').addEventListener('change',()=>renderKidStages(row));
+    row.querySelector('.rm').addEventListener('click',()=>{ row.classList.add('removing'); setTimeout(()=>{ row.remove(); renumberChildren(); renderRiskList(); }, 220); });
+    return row;
+  }
+  $('#addChild').addEventListener('click',()=>{ const list=$('#childList'); list.appendChild(childRow()); renumberChildren(); renderRiskList(); list.lastChild.classList.add('adding'); requestAnimationFrame(()=>list.lastChild.classList.remove('adding')); });
+  // 预填 1 个参考娃，保证「生娃路径 vs 不生娃路径」对比始终有数据（用户可增删）
+  (function(){ const list=$('#childList'); list.appendChild(childRow()); renumberChildren(); })();
+  // 「不生娃」参考值表（填写页展示，让对比透明）
+  (function(){
+    const body=$('#childRefBody'); if(!body) return;
+    body.innerHTML = CHILD_STAGE_DEFS.map(d=>`<tr><td>${d.name}（${d.age}）</td><td>${d.def}</td></tr>`).join('');
+  })();
+
+  // ---- 动态：父母赡养（逐位长辈，按「父母年龄」分段）----
+  const PARENT_STAGE_DEFS = [
+    {key:'p_pre', name:'退休前 / 刚退休', age:'–59 岁',    from:0,  to:59,  def:1.0},
+    {key:'p_60',  name:'退休初期',       age:'60–69 岁',   from:60, to:69,  def:2.0},
+    {key:'p_70',  name:'高龄阶段',       age:'70–79 岁',   from:70, to:79,  def:4.0},
+    {key:'p_80',  name:'高龄照护阶段',   age:'80 岁以上',  from:80, to:200, def:8.0},
+  ];
+  const DEFAULT_PARENT_STOP_AGE = 90; // 与全局测算终点默认 90 岁保持一致
+  function fillParentYearSelect(sel, def){
+    const y0 = new Date().getFullYear();
+    for(let y=y0-30; y>=y0-95; y--){
+      const o=document.createElement('option'); o.value=y;
+      o.textContent = y+' 年（现 '+(y0-y)+' 岁）';
+      if(def===y) o.selected=true; sel.appendChild(o);
+    }
+  }
+  function renumberParents(){ $$('#parentList .parentrow').forEach((r,i)=>{ r.querySelector('.seq').textContent='长辈 '+(i+1); }); }
+  // 渲染单个长辈的分年龄段赡养支出：仅显示「父母当前年龄 → 截止年龄」之间的段
+  function renderParentStages(row){
+    const box=row.querySelector('.pstages'); if(!box) return;
+    const y0=new Date().getFullYear();
+    const by=parseInt(row.querySelector('.pbyear').value)||y0;
+    const stopAge=parseInt(row.querySelector('.pstop').value)||DEFAULT_PARENT_STOP_AGE;
+    const curAge=y0-by;
+    // 保留已填数值（切换出生年 / 截止年龄时不丢输入）
+    const old={}; Array.from(row.querySelectorAll('.pstage')).forEach(inp=>{ if(inp.value!=='') old[inp.dataset.key]=inp.value; });
+    const shown = PARENT_STAGE_DEFS
+      .filter(d=> d.to >= curAge && d.from < stopAge)
+      .map(d=>{ const f=Math.max(d.from, curAge); const t=Math.min(d.to, stopAge-1); return (f<=t)? Object.assign({}, d, {from:f, to:t}) : null; })
+      .filter(Boolean);
+    if(!shown.length){ box.innerHTML='<div class="stage-head" style="margin-top:0">该长辈已超过赡养截止年龄，无赡养支出。</div>'; return; }
+    const rowsHtml = shown.map(d=>{
+      const lab = (d.from===curAge && d.from>0) ? (curAge+'–'+d.to+' 岁（本阶段剩余）') : (d.age==='–59 岁' ? (d.from+'–'+d.to+' 岁') : d.age);
+      const val = (old[d.key]!==undefined) ? old[d.key] : '';
+      return `<tr><td>${d.name}</td><td class="age">${lab}</td><td class="ref">~${d.def}</td><td><input type="number" class="pstage" data-key="${d.key}" min="0" step="0.1" placeholder="填此处" value="${val}"> 万/年</td></tr>`;
+    }).join('');
+    const title = (curAge>0) ? `（该长辈当前 ${curAge} 岁，从当前年龄起算至 ${stopAge-1} 岁）` : '';
+    box.innerHTML = `<div class="stage-head" style="margin-top:0">分年龄段赡养支出${title}（参考值仅展示，请在「您的填写」列按实际填）</div><table class="stage-tbl"><thead><tr><th>阶段</th><th>父母年龄区间</th><th>参考值(万/年)</th><th>您的填写(万/年)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  }
+  function parentRow(label, birthYear){
+    const row=document.createElement('div'); row.className='parentrow childrow';
+    row.innerHTML=`<span class="seq">长辈 1</span>
+      <span class="at">称呼</span>
+      <select class="plabel">
+        <option>父亲</option><option>母亲</option><option>岳父</option><option>岳母</option>
+        <option>公公</option><option>婆婆</option><option>爷爷</option><option>奶奶</option>
+        <option>外公</option><option>外婆</option><option>其他长辈</option>
+      </select>
+      <span class="at">出生年份</span><select class="pbyear"></select>
+      <span class="at">赡养截止（父母年龄）</span><input type="number" class="pstop" value="${DEFAULT_PARENT_STOP_AGE}" min="60" max="110" step="1" style="width:110px"> 岁
+      <button class="btn sm ghost rm" type="button">删除</button>
+      <div class="pstages" style="flex-basis:100%;margin-top:8px"></div>`;
+    if(label) row.querySelector('.plabel').value=label;
+    fillParentYearSelect(row.querySelector('.pbyear'), birthYear);
+    renderParentStages(row);
+    row.querySelector('.pbyear').addEventListener('change',()=>{ renderParentStages(row); renderParentHint(); });
+    row.querySelector('.pstop').addEventListener('input',()=>{ renderParentStages(row); renderParentHint(); });
+    row.querySelector('.rm').addEventListener('click',()=>{ row.classList.add('removing'); setTimeout(()=>{ row.remove(); renumberParents(); renderParentHint(); renderRiskList(); }, 220); });
+    return row;
+  }
+  // 父母赡养 vs 测算终点 的一致性提示
+  function renderParentHint(){
+    const box=$('#parentHint'); if(!box) return;
+    const plan=(document.querySelector('input[name=planParents]:checked')||{}).value;
+    if(plan!=='yes'){ box.innerHTML=''; return; }
+    const y0=new Date().getFullYear();
+    const myAge=computeAge(); const base=(myAge==null||myAge<0)?37:myAge;
+    const target=parseInt($('#target').value)||90;
+    const myBirth=y0-base, myEndYear=myBirth+target;
+    let maxYear=0, who='';
+    $$('#parentList .parentrow').forEach(r=>{
+      const by=parseInt(r.querySelector('.pbyear').value)||y0;
+      const stop=parseInt(r.querySelector('.pstop').value)||DEFAULT_PARENT_STOP_AGE;
+      if(by+stop-1>maxYear){ maxYear=by+stop-1; who=r.querySelector('.plabel').value+'（'+by+' 年生，赡养至'+stop+'岁）'; }
+    });
+    if(!maxYear){ box.innerHTML=''; return; }
+    if(maxYear>myEndYear){
+      const need=target+(maxYear-myEndYear);
+      box.innerHTML=`<span style="color:#c0392b">⚠️ 赡养最晚计入到 <b>${maxYear}</b> 年（${who}），但你的测算终点是 <b>${myEndYear}</b> 年（${target} 岁）——<b>超出的 ${maxYear-myEndYear} 年赡养支出未计入</b>，会低估总需求。建议把第 1 部分「测算终点」调到 <b>${need} 岁</b>以上，或下调该长辈的赡养截止年龄。</span>`;
+    }else{
+      box.innerHTML=`<span style="color:var(--sub)">✅ 赡养最晚计入到 <b>${maxYear}</b> 年，仍在你的测算终点 <b>${myEndYear}</b> 年（${target} 岁）之内，无截断。</span>`;
+    }
+  }
+  $('#addParent').addEventListener('click',()=>{
+    const list=$('#parentList'); list.appendChild(parentRow('其他长辈', new Date().getFullYear()-60));
+    renumberParents(); renderParentHint(); renderRiskList();
+    list.lastChild.classList.add('adding'); requestAnimationFrame(()=>list.lastChild.classList.remove('adding'));
+  });
+  // 预置父亲（1960 年）与母亲（1962 年），用户可改可删
+  (function(){
+    const list=$('#parentList');
+    list.appendChild(parentRow('父亲', 1960));
+    list.appendChild(parentRow('母亲', 1962));
+    renumberParents();
+  })();
+  $('#target').addEventListener('change', renderParentHint);
+  $('#dob').addEventListener('change', renderParentHint);
+  $$('input[name=planParents]').forEach(r=>r.addEventListener('change', renderParentHint));
+  renderParentHint();
+  // 风险保障评估的成员列表与前面的问卷联动：配偶/孩子/长辈变化时同步刷新（勾选状态由 riskSelections 缓存保留）
+  $('#hasSpouse').addEventListener('change', renderRiskList);
+  $$('input[name=planChildren]').forEach(r=>r.addEventListener('change', renderRiskList));
+  $$('input[name=planParents]').forEach(r=>r.addEventListener('change', renderRiskList));
+  renderRiskList();
+
+  // ---- 动态：一次性进账可添加多笔 ----
+  function lumpRow(){
+    const row=document.createElement('div'); row.className='lumprow';
+    row.innerHTML=`<select class="lcat">
+        <option value="继承">继承</option>
+        <option value="拆迁补偿">拆迁补偿</option>
+        <option value="股权/房产变现">股权 / 房产变现</option>
+        <option value="一次性奖金/嘉奖">一次性奖金 / 嘉奖</option>
+        <option value="其他">其他</option>
+      </select>
+      <input type="number" class="lamt" value="50" min="0" step="1" placeholder="金额(万)">
+      <select class="lyear"></select>
+      <button class="btn sm ghost rm" type="button">删除</button>`;
+    fillYearSelect(row.querySelector('.lyear'), new Date().getFullYear()+5);
+    row.querySelector('.rm').addEventListener('click',()=>{ row.classList.add('removing'); setTimeout(()=>{ row.remove(); const s=document.getElementById('survey'); if(s) s.dispatchEvent(new Event('change')); }, 200); });
+    return row;
+  }
+  $('#addLump').addEventListener('click',()=>{ const list=$('#lumpList'); list.appendChild(lumpRow()); list.lastChild.classList.add('adding'); requestAnimationFrame(()=>list.lastChild.classList.remove('adding')); const s=document.getElementById('survey'); if(s) s.dispatchEvent(new Event('change')); });
+
+  // ---- 动态：提前还贷（buy / ownLoan 通用工厂）----
+  function buildPrepayRow(yearFrom, yearTo, whichOptions){
+    const row=document.createElement('div'); row.className='prepayrow';
+    let opts=''; for(let y=yearFrom+1; y<=yearTo; y++){ opts+=`<option value="${y}">${y} 年</option>`; }
+    const wopts=(whichOptions||[{value:'comm',label:'冲抵：商贷'},{value:'gjj',label:'冲抵：公积金贷款'}])
+      .map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+    row.innerHTML=`<select class="pyear">${opts}</select>
+      <select class="pwhich">${wopts}</select>
+      <select class="pmode">
+        <option value="keepTerm">保持还款年限（月供减少）</option>
+        <option value="reduceTerm">减少还款年限（月供不变）</option>
+      </select>
+      <input type="number" class="pamt" value="20" min="0" step="1" placeholder="金额(万)">
+      <button class="btn sm ghost rm" type="button">删除</button>`;
+    row.querySelector('.rm').addEventListener('click',()=>{ row.classList.add('removing'); setTimeout(()=>{ row.remove(); const s=document.getElementById('survey'); if(s) s.dispatchEvent(new Event('change')); }, 200); });
+    return row;
+  }
+  function reflowPrepayYears(listId, yearFrom, yearTo){
+    $$('#'+listId+' .prepayrow').forEach(row=>{
+      const cur=parseInt(row.querySelector('.pyear').value)||0;
+      const s=row.querySelector('.pyear'); const keep=(cur>=yearFrom+1 && cur<=yearTo)?cur:0;
+      s.innerHTML='';
+      for(let y=yearFrom+1; y<=yearTo; y++){ const o=document.createElement('option'); o.value=y; o.textContent=y+' 年'; s.appendChild(o); }
+      if(keep) s.value=keep;
+    });
+  }
+  function setupPrepayArea(listId, addBtnId, getRange, whichOptions, reflowEvents){
+    $('#'+addBtnId).addEventListener('click',()=>{
+      const g=getRange(); const list=$('#'+listId);
+      list.appendChild(buildPrepayRow(g.from, g.to, whichOptions));
+      list.lastChild.classList.add('adding'); requestAnimationFrame(()=>list.lastChild.classList.remove('adding'));
+      const s=document.getElementById('survey'); if(s) s.dispatchEvent(new Event('change'));
+    });
+    (reflowEvents||[]).forEach(id=>$('#'+id).addEventListener('change',()=>{ const g=getRange(); reflowPrepayYears(listId, g.from, g.to); }));
+  }
+  const buyRange = ()=>({ from: parseInt($('#buyYear').value)||new Date().getFullYear(), to: (parseInt($('#buyYear').value)||new Date().getFullYear()) + (parseInt($('#loanYears').value)||30) });
+  const ownRange = ()=>{ const y0=new Date().getFullYear(); return { from: y0, to: parseInt($('#loanEndYear').value)||(y0+30) }; };
+  setupPrepayArea('prepayList','addPrepay',buyRange,undefined,['buyYear','loanYears']);
+  setupPrepayArea('prepayListOwn','addPrepayOwn',ownRange,[{value:'comm',label:'冲抵：商贷'},{value:'gjj',label:'冲抵：公积金'}],['loanEndYear']);
+
+  // ---- 动态：投资和被动收入（统一项：投入段 + 收益段）----
+  function renumberItems(){ $$('#itemList .itemrow').forEach((r,i)=>{ r.querySelector('.seq').textContent='项 '+(i+1); }); }
+  function tagClassOf(v){ return v==='社保养老金'?'t-social':v==='商业保险年金'?'t-ann':'t-other'; }
+  // 实时汇总（仅展示，不影响引擎计算）
+  function updateItemSummary(){
+    let count=0, invSum=0, passSum=0, cum=0;
+    $$('#itemList .itemrow').forEach(r=>{
+      const inv=parseFloat(r.querySelector('.iamt').value)||0;
+      const yrs=parseInt(r.querySelector('.iyears').value)||0;
+      const pay=parseFloat(r.querySelector('.pamt').value)||0;
+      const pyrs=parseInt(r.querySelector('.pyears').value)||0;
+      if(inv>0||pay>0){ count++; invSum+=inv*yrs; passSum+=pay; cum+=pay*pyrs; }
+    });
+    const set=(id,v)=>{ const el=$('#'+id); if(el) el.textContent=v; };
+    set('sumCount',count); set('sumInv',invSum.toFixed(1)); set('sumPass',cum.toFixed(1));
+  }
+  function itemRow(def, defPayoutYear){
+    const row=document.createElement('div'); row.className='annrow itemrow adding';
+    const tc=tagClassOf(def);
+    row.innerHTML=`
+      <div class="ihead">
+        <span class="seq">项 1</span>
+        <span class="itype ${tc}">${def||'其它'}</span>
+        <button class="btn sm ghost rm" type="button">删除</button>
+      </div>
+      <div class="ibody">
+        <div class="seg seg-in">
+          <div class="seg-title">投入段</div>
+          <div class="fld"><span>投资名称</span>
+            <select class="iname">
+              <option value="社保养老金">社保养老金</option>
+              <option value="商业保险年金">商业保险年金</option>
+              <option value="其它">其它（自填）</option>
+            </select>
+            <input type="text" class="icustom" placeholder="自填名称" style="display:none">
+          </div>
+          <div class="fld-row">
+            <div class="fld"><span>开始年份</span><select class="iyear"></select></div>
+            <div class="fld"><span>投资年数</span><input type="number" class="iyears" value="30" min="0" step="1"></div>
+            <div class="fld"><span>投资万/年</span><input type="number" class="iamt" value="0" min="0" step="0.5"></div>
+          </div>
+        </div>
+        <div class="seg seg-out">
+          <div class="seg-title">收益段</div>
+          <div class="fld-row">
+            <div class="fld"><span>收益万/年</span><input type="number" class="pamt" value="5" min="0" step="0.01"></div>
+            <div class="fld"><span>起领年份</span><select class="pyear"></select></div>
+            <div class="fld"><span>收益年数</span><input type="number" class="pyears" value="30" min="1" step="1"></div>
+          </div>
+        </div>
+      </div>`;
+    fillYearSelect(row.querySelector('.iyear'), new Date().getFullYear(), new Date().getFullYear()-30);
+    fillYearSelect(row.querySelector('.pyear'), defPayoutYear || (new Date().getFullYear()+10));
+    const iname=row.querySelector('.iname'); const itype=row.querySelector('.itype');
+    if(def) iname.value=def;
+    iname.addEventListener('change',()=>{ const v=iname.value; const ic=row.querySelector('.icustom'); ic.style.display = (v==='其它')?'block':'none'; itype.textContent=(v==='其它')?'其它':v; itype.className='itype '+tagClassOf(v); updateItemSummary(); });
+    row.querySelectorAll('input').forEach(inp=> inp.addEventListener('input',updateItemSummary));
+    row.querySelector('.rm').addEventListener('click',()=>{ row.classList.add('removing'); setTimeout(()=>{ row.remove(); renumberItems(); updateItemSummary(); }, 220); });
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ row.classList.remove('adding'); }); });
+    return row;
+  }
+  $('#addItem').addEventListener('click',()=>{ $('#itemList').appendChild(itemRow('商业保险年金')); renumberItems(); updateItemSummary(); });
+  $('#itemList').appendChild(itemRow('社保养老金', new Date().getFullYear()+30)); renumberItems(); updateItemSummary(); // 默认一条：社保养老金
+
+  // ---- 问卷分区导航 + 填写进度 ----
+  setupSurveyNav();
+
+  // ---- 取值工具 ----
+  function val(n){ const el=document.querySelector('input[name="'+n+'"]:checked'); return el?el.value:null; }
+  function num(id){ const v=parseFloat($('#'+id).value); return isNaN(v)?0:v; }
+
+  function gather(){
+    const age=computeAge();
+    const incomeType=val('incomeType');
+    // 税后工资按年龄段：仅采集当前展示的段（与 [年龄,退休年龄] 相交）
+    const wageBands = [];
+    if (incomeType==='stable'||incomeType==='freelance') {
+      $$('#wageBands .wb').forEach(inp=>{
+        const annual=parseFloat(inp.value); if(isNaN(annual)) return;
+        wageBands.push({ from:parseInt(inp.dataset.from), to:parseInt(inp.dataset.to), annual });
+      });
+    }
+    const y0=new Date().getFullYear();
+    // 投资和被动收入（统一项：投入段 + 收益段）
+    const items=[]; $$('#itemList .itemrow').forEach(r=>{
+      const name=r.querySelector('.iname').value;
+      const customName = (name==='其它') ? r.querySelector('.icustom').value.trim() : '';
+      const investStartYear=parseInt(r.querySelector('.iyear').value)||y0;
+      const investYears=parseInt(r.querySelector('.iyears').value)||0;
+      const investAmount=parseFloat(r.querySelector('.iamt').value)||0;
+      const payoutAmount=parseFloat(r.querySelector('.pamt').value)||0;
+      const payoutStartYear=parseInt(r.querySelector('.pyear').value)||y0;
+      const payoutYears=parseInt(r.querySelector('.pyears').value)||1;
+      if(investAmount>0 || payoutAmount>0) items.push({name,customName,investStartYear,investYears,investAmount,payoutType:'yearly',payoutAmount,payoutStartYear,payoutYears});
+    });
+    // 生育规划
+    const childrenPlan=val('planChildren')||'no';
+    // 生娃：逐个孩子构建 kids 数组（{startYear, years, stages}），覆盖已有娃与计划生；
+    // 每个娃的 stages 仅含「当前岁数起」的阶段（已出生娃自然从当前岁数开始算）
+    const kids=[];
+    $$('#childList .childrow').forEach(r=>{
+      const by=parseInt(r.querySelector('.cyear').value);
+      const yr=parseInt(r.querySelector('.cyrs').value)||0;
+      if(!by) return;
+      const curAge = by<=y0 ? (y0-by) : -1;
+      const stages = CHILD_STAGE_DEFS.filter(d=> d.to >= curAge).map(d=>{
+        const inp = r.querySelector('.kstage[data-key="'+d.key+'"]');
+        const v = inp ? ((inp.value==='')?d.def:(parseFloat(inp.value)||0)) : d.def;
+        return { from:d.from, to:d.to, annual:v };
+      });
+      kids.push({startYear:by, years:yr, stages});
+    });
+    // 生娃情景假设：用于「生娃路径 vs 不生娃路径」对比
+    let childAssume, children;
+    if(childrenPlan==='no'){
+      // 选不生娃 → 用参考值构建「生 1 个参考娃」情景做对比，无需用户填写
+      const refStart = y0 + 1; // 次年出生
+      childAssume = { plan:'yes', count:1, startYear: refStart, annualCost:0, years:0, incomeLoss:0, kids:[{startYear:refStart, years:0, stages:DEFAULT_KID_STAGES}], stages: DEFAULT_KID_STAGES };
+      children = { plan:'no', count:0, startYear: refStart, annualCost:0, years:0, incomeLoss:0, kids:null, stages: DEFAULT_KID_STAGES };
+    } else {
+      // 选生娃 → 用用户填写的逐娃假设
+      childAssume = { plan:'yes', count: kids.length, startYear: kids.length?kids[0].startYear:0, annualCost:0, years:0, incomeLoss: num('childLoss'), kids: kids, stages: DEFAULT_KID_STAGES };
+      children = childAssume;
+    }
+    const childCount = children.count;
+    // 一次性大额进账（可多笔）
+    const lumps=[];
+    $$('#lumpList .lumprow').forEach(r=>{
+      const amt=parseFloat(r.querySelector('.lamt').value)||0;
+      const yr=parseInt(r.querySelector('.lyear').value)||y0;
+      if(amt>0) lumps.push({ year: yr, amount: amt, cat: r.querySelector('.lcat').value });
+    });
+    // 父母赡养（逐位长辈）：{label, birthYear, stopAge, stages:[{from,to,annual}]}
+    // 每位长辈只保留「当前父母年龄 → 截止年龄」之间的段，未填写的段回退参考值
+    const parentsPlan = val('planParents')||'no';
+    const parents=[];
+    if(parentsPlan==='yes'){
+      $$('#parentList .parentrow').forEach(r=>{
+        const by=parseInt(r.querySelector('.pbyear').value);
+        if(!by) return;
+        const stopAge=parseInt(r.querySelector('.pstop').value)||DEFAULT_PARENT_STOP_AGE;
+        const curAge=y0-by;
+        const stages = PARENT_STAGE_DEFS
+          .filter(d=> d.to >= curAge && d.from < stopAge)
+          .map(d=>{ const f=Math.max(d.from, curAge); const t=Math.min(d.to, stopAge-1); return Object.assign({}, d, {from:f, to:t}); })
+          .filter(d=> d.from<=d.to)
+          .map(d=>{
+            const inp = r.querySelector('.pstage[data-key="'+d.key+'"]');
+            const v = inp ? ((inp.value==='')?d.def:(parseFloat(inp.value)||0)) : d.def;
+            return { from:d.from, to:d.to, annual:v };
+          });
+        parents.push({ label:r.querySelector('.plabel').value, birthYear:by, stopAge, stages });
+      });
+    }
+    // 提前还贷（可多笔）：{year(绝对), which('gjj'|'comm'|'loan'), amount(万)}
+    const prepays=[];
+    $$('#prepayList .prepayrow, #prepayListOwn .prepayrow').forEach(r=>{
+      const amt=parseFloat(r.querySelector('.pamt').value)||0;
+      const yr=parseInt(r.querySelector('.pyear').value)||0;
+      if(amt>0 && yr>0) prepays.push({ year: yr, which: r.querySelector('.pwhich').value, mode: r.querySelector('.pmode').value, amount: amt });
+    });
+    const a={
+      currentAge: age, dob: $('#dob').value,
+      startBalance: num('assets'),
+      incomeType, wageBands,
+      retireAge: parseInt($('#retireAge').value)||60,
+      targetAge: parseInt($('#target').value)||90,
+      returnRate: ($('#ret').value==='custom') ? ((parseFloat($('#retCustom').value)||0)/100) : (parseFloat($('#ret').value)||0.02),
+      items,
+      childrenPlan, childCount, childStartYear: children.startYear, childAnnual: children.annualCost, childYears: children.years, childIncomeLoss: children.incomeLoss, kids: children.kids, childAssume, childStages: DEFAULT_KID_STAGES,
+      housing: val('housing'),
+      ownLoanCommBal: num('ownLoanCommBal'),
+      ownLoanCommRate: num('ownLoanCommRate')/100,
+      ownLoanGjjBal: num('ownLoanGjjBal'),
+      ownLoanGjjRate: num('ownLoanGjjRate')/100,
+      rentMonthly: num('rentMonthly'),
+      preBuyRentMonthly: num('preBuyRent'),
+      buyTotal: num('buyTotal'), downPayment: num('downPayment'), loanGjj: num('loanGjj'), loanComm: num('loanComm'),
+      loanYears: parseInt($('#loanYears').value)||30,
+      gjjRate: num('gjjRate')/100, commRate: num('commRate')/100,
+      buyYear: parseInt($('#buyYear').value)||y0,
+      loanEndYear: parseInt($('#loanEndYear').value)||(y0+30),
+      dailyAnnual: num('dailyTotal'),
+      lumps,
+      prepays,
+      parents, parentsPlan,
+      riskCover: (function(){
+        return $$('#riskList .risk-card').map(card=>({
+          key: card.dataset.member, label: card.dataset.label,
+          insured: [...card.querySelectorAll('.ropt:checked')].map(c=>c.dataset.ins)
+        }));
+      })(),
+      worry: $('#worry').value.trim()
+    };
+    return a;
+  }
+
+  let chartRef=null;
+  function fmt(n){ const v=Math.round(n*10)/10; return (v>0?'+':'')+v+' 万'; }
+  function cls(n){ return n<0?'neg':'pos'; }
+
+  function run(){
+    $('#err').textContent=''; $('#err').classList.remove('show');
+    let ans,plan,res,cmp,endVal;
+    try{
+      ans=gather();
+      if(ans.currentAge==null){ const e=$('#err'); e.textContent='⚠ 请填写有效的出生日期'; e.classList.add('show'); return; }
+      plan=FPEngine.buildPlan(ans); res=FPEngine.project(plan); cmp=FPEngine.compare(plan);
+      endVal=res.metrics.finalEnd;
+    }catch(e){ const er=$('#err'); er.textContent='⚠ 计算出错：'+e.message; er.classList.add('show'); return; }
+    $('#survey').style.display='none'; $('#results').style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
+
+    // 生娃与否 · 财务岔路：始终对比「生娃路径」vs「不生娃路径」
+    const ca = ans.childAssume;
+    const planChild = Object.assign({}, plan, { children:{ plan:(ca.plan==='has'?'has':'yes'), count:ca.count, startYear:ca.startYear, annualCost:0, years:0, incomeLoss:ca.incomeLoss, kids:(ca.kids||[]), stages: ca.stages } });
+    const resChild = FPEngine.project(planChild);
+    const planNoChild = Object.assign({}, plan, { children:{ plan:'no', count:0, startYear:ca.startYear, annualCost:0, years:0, incomeLoss:0, kids:[], stages: ca.stages } });
+    const resNoChild = FPEngine.project(planNoChild);
+    // 买房与否 · 决策对照：购房 / 一直租房 互换各算一次
+    const planRent = Object.assign({}, plan, { housing:'rent' });
+    const resRent = FPEngine.project(planRent);
+    const planBuy = Object.assign({}, plan, { housing:'buy' });
+    const resBuy = FPEngine.project(planBuy);
+
+    renderSummary(plan,res,ans); renderKPIs(res); renderChart(res); renderTable(res); renderVerdict(res,ans); renderCompare(cmp);
+    renderSynthesisInit(endVal,cmp);
+    renderChildFork(resChild, resNoChild, ans);
+    renderHomeFork(plan, res, resRent, resBuy, ans);
+    renderInvest(res, ans);
+    renderAssump(plan,ans);
+    renderRisk(ans, plan, res);
+    setupResultNav();
+  }
+  function setupResultNav(){
+    const nav=$('#resultnav'); if(!nav) return;
+    const links=Array.from(nav.querySelectorAll('a[data-sec]'));
+    const sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    let ticking=false;
+    function spy(){
+      ticking=false;
+      let active=sections[0];
+      for(const s of sections){ if(s.offsetParent===null) continue; if(s.getBoundingClientRect().top <= 120) active=s; }
+      links.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+active.id));
+    }
+    window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(spy); } },{passive:true});
+    spy();
+    const toTop=$('#toTop');
+    function tog(){ if((window.scrollY||window.pageYOffset)>600) toTop.classList.add('show'); else toTop.classList.remove('show'); }
+    window.addEventListener('scroll',tog,{passive:true}); tog();
+    toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+  }
+
+  function renderSummary(plan,res,ans){ $('#summary-line').textContent=`当前 ${plan.currentAge} 岁、起点本金约 ${plan.startBalance} 万、测算区间 ${res.rows[0].age}–${res.metrics.finalAge} 岁、年化 ${Math.round(plan.returnRate*1000)/10}%。`; }
+  function renderKPIs(res){
+    const m=res.metrics; const tag=m.allPositive?'<span class="tag safe"><i class="check">✓</i>全程为正</span>':'<span class="tag risk"><i class="bang">!</i>中途见底</span>';
+    $('#kpisTag').innerHTML=tag;
+    const items=[
+      {t:'目标年龄终点余额',v:fmt(m.finalEnd),c:cls(m.finalEnd)},
+      {t:'资金首次转负',v:m.firstNegative?(m.firstNegative.age+' 岁'):'—',c:m.firstNegative?'neg':'pos'},
+      {t:'窗口最低点',v:m.worst.value===Infinity?'—':fmt(m.worst.value),c:m.worst.value<0?'neg':'pos'},
+      {t:'目标年龄缺口',v:m.gapAtTarget>0?fmt(-m.gapAtTarget):'无（盈余）',c:m.gapAtTarget>0?'neg':'pos'},
+    ];
+    $('#kpis').innerHTML=items.map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div></div>`).join('');
+  }
+  function renderChart(res){
+    const ctx=$('#chart'); const labels=res.rows.map(r=>r.age+'岁'); const data=res.rows.map(r=>r.end);
+    if(chartRef) chartRef.destroy();
+    if(typeof Chart==='undefined'){ const d=document.createElement('div'); d.textContent='（图表库未加载，请查看下方明细表）'; d.style.cssText='padding:20px;color:#52606d'; ctx.replaceWith(d); return; }
+    chartRef=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'年末余额（万）',data,borderColor:'#2f6f8f',backgroundColor:'rgba(47,111,143,.08)',fill:true,tension:.25,pointRadius:0,borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'余额 '+fmt(c.parsed.y)+'（'+(c.parsed.y<0?'已见底':'为正')+'）'}}},
+        scales:{y:{grid:{color:'#eef2f5'},ticks:{color:'#52606d'},title:{display:true,text:'万元',color:'#52606d'}},x:{grid:{display:false},ticks:{color:'#52606d',maxTicksLimit:14}}}}});
+    chartRef.data.datasets.push({label:'0 基准',data:data.map(()=>0),borderColor:'#d64545',borderDash:[5,4],borderWidth:1,pointRadius:0,fill:false}); chartRef.update();
+  }
+  function renderTable(res){
+    const inc=v=> (v>0?'+':'') + v.toFixed(2);   // 收入一律带 + 号（零显示 0.00）
+    const exp=v=> (v>0?'-':'') + v.toFixed(2);   // 支出一律带 − 号（零显示 0.00）
+    const head=`<tr>
+      <th class="fy">年份/年龄</th>
+      <th class="th-bal">期初</th>
+      <th class="th-inc">理财收益</th>
+      <th class="th-inc">主动收入</th>
+      <th class="th-inc">被动收入</th>
+      <th class="th-inc">一次性收入</th>
+      <th class="th-inc">收入合计</th>
+      <th class="th-exp">住房支出</th>
+      <th class="th-exp">生活支出</th>
+      <th class="th-exp">投资支出</th>
+      <th class="th-exp">生育支出</th>
+      <th class="th-exp">父母赡养</th>
+      <th class="th-exp">支出合计</th>
+      <th class="th-bal">期末</th>
+    </tr>`;
+    const body=res.rows.map(r=>{
+      const ec=r.end<0?'negcell':'poscell';
+      return `<tr>
+        <td class="fy">${r.year}/${r.age}</td>
+        <td class="td-bal">${r.b0.toFixed(2)}</td>
+        <td class="td-inc">${inc(r.ret)}</td>
+        <td class="td-inc">${inc(r.wage||0)}</td>
+        <td class="td-inc">${inc(r.passive||0)}</td>
+        <td class="td-inc">${inc(r.oneTime||0)}</td>
+        <td class="td-inc">${inc(r.income||0)}</td>
+        <td class="td-exp">${exp(r.housing)}</td>
+        <td class="td-exp">${exp(r.daily)}</td>
+        <td class="td-exp">${exp(r.investment)}</td>
+        <td class="td-exp">${exp(r.child||0)}</td>
+        <td class="td-exp">${exp(r.parent||0)}</td>
+        <td class="td-exp">${exp(r.expense)}</td>
+        <td class="${ec} td-bal">${r.end.toFixed(2)}</td>
+      </tr>`;
+    }).join('');
+    // 总计行：逐列汇总
+    const T={ret:0,wage:0,passive:0,oneTime:0,income:0,housing:0,daily:0,investment:0,child:0,parent:0,expense:0};
+    res.rows.forEach(r=>{T.ret+=r.ret;T.wage+=r.wage;T.passive+=r.passive;T.oneTime+=r.oneTime;T.income+=r.income;T.housing+=r.housing;T.daily+=r.daily;T.investment+=r.investment;T.child+=r.child;T.parent+=(r.parent||0);T.expense+=r.expense;});
+    const fe=res.metrics.finalEnd;
+    const totalRow=`<tr class="total-row">
+      <td class="fy">总计</td>
+      <td class="td-bal">—</td>
+      <td class="td-inc">${inc(T.ret)}</td>
+      <td class="td-inc">${inc(T.wage)}</td>
+      <td class="td-inc">${inc(T.passive)}</td>
+      <td class="td-inc">${inc(T.oneTime)}</td>
+      <td class="td-inc">${inc(T.income)}</td>
+      <td class="td-exp">${exp(T.housing)}</td>
+      <td class="td-exp">${exp(T.daily)}</td>
+      <td class="td-exp">${exp(T.investment)}</td>
+      <td class="td-exp">${exp(T.child)}</td>
+      <td class="td-exp">${exp(T.parent)}</td>
+      <td class="td-exp">${exp(T.expense)}</td>
+      <td class="td-bal ${fe<0?'negcell':'poscell'}">${fe.toFixed(2)}</td>
+    </tr>`;
+    $('#tbl').innerHTML=head+body+totalRow;
+  }
+  function renderVerdict(res,ans){
+    const m=res.metrics; let s='';
+    if(m.allPositive) s+=`<b>结论：资产在测算区间内全程为正。</b> 最薄安全垫在 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}），到 ${m.finalAge} 岁仍有 ${fmt(m.finalEnd)}。`;
+    else s+=`<b>结论：存在财务缺口。</b> 预计在 <b>${m.firstNegative.age} 岁（${m.firstNegative.year} 年）</b>首次转负，窗口最差点在 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}）。`;
+    s+='<br><br><b>钱主要被什么消耗：</b>';
+    const tot={}; res.rows.forEach(r=>{tot.housing=(tot.housing||0)+r.housing;tot.daily=(tot.daily||0)+r.daily;tot.investment=(tot.investment||0)+r.investment;tot.child=(tot.child||0)+r.child;tot.parent=(tot.parent||0)+(r.parent||0);});
+    const order=Object.entries(tot).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]>0); const nm={housing:'住房',daily:'基本生活',investment:'投资投入',child:'生育规划',parent:'父母赡养'};
+    s+=order.map(x=>`${nm[x[0]]||x[0]}（区间合计约 ${Math.round(x[1])} 万）`).join('、')+'。';
+    if(ans.worry) s+=`<br><br><b>你最担心的：</b>「${ans.worry}」。模型显示上述缺口年份与量级，可作为评估依据——但模型只算流动性，这类担忧常含非财务维度（见 B 部分）。`;
+    // 风险缺口 × 测算缺口 联动（定性）：财务已有缺口时，若家庭支柱缺关键险种，提醒缺口可能提前/加深
+    const pillar=(ans.riskCover||[]).filter(m=>m && (m.key==='self'||m.key==='spouse'));
+    const pillarMissing=[];
+    ['accident','medical','critical','life'].forEach(k=>{ if(!pillar.some(m=>(m.insured||[]).includes(k))) pillarMissing.push((INSURANCE_TYPES.find(t=>t.key===k)||{}).name); });
+    if(!m.allPositive && pillarMissing.length){
+      s+=`<br><br><b>风险 × 缺口联动：</b>你在 <b>${m.firstNegative.age} 岁</b>首次转负，而家庭支柱（本人 / 配偶）尚未配置「${pillarMissing.join('、')}」——这类风险一旦发生（收入断流 / 大额医疗），缺口会<b>提前、加深</b>，建议优先补齐。`;
+    }
+    s+='<br><br><span style="color:#52606d">务实提醒：参数为估算，利率/收入/支出任一变动都会改变终点。把结果当「风险日历」，非确定剧本。</span>';
+    $('#verdict').innerHTML=s;
+  }
+  function renderRisk(ans, plan, res){
+    const box=$('#risk'); if(!box) return;
+    const members=(ans.riskCover||[]).filter(m=>m && m.label);
+    if(!members.length){ box.innerHTML='<p class="muted">未填写风险保障评估（第 10 部分）。</p>'; return; }
+    const totalTypes=INSURANCE_TYPES.length;
+    const totalSlots=members.length*totalTypes;
+    const allInsured=members.reduce((s,m)=>s+(m.insured||[]).length,0);
+    const pct=Math.round(allInsured/totalSlots*100);
+    let s=`<div class="kpis">
+      <div class="kpi"><div class="t">家庭成员</div><div class="v">${members.length} 人</div></div>
+      <div class="kpi"><div class="t">已配置险种</div><div class="v pos">${allInsured} 项</div></div>
+      <div class="kpi"><div class="t">未配置险种</div><div class="v ${allInsured<totalSlots?'neg':'pos'}">${totalSlots-allInsured} 项</div></div>
+      <div class="kpi"><div class="t">保障覆盖率</div><div class="v">${pct}%</div></div>
+    </div>`;
+    s+='<div class="risk-grid">';
+    members.forEach(m=>{
+      const ins=m.insured||[];
+      const missing=INSURANCE_TYPES.filter(t=>!ins.includes(t.key));
+      const ok=ins.length>0;
+      s+=`<div class="risk-cell ${ok?'ok':'gap'}">
+        <div class="rc-top"><span class="rc-name">${m.label}</span>${ok?`<span class="rc-badge ok">${ins.length} 项已配</span>`:'<span class="rc-badge gap">无保障</span>'}</div>
+        ${ins.length?`<div class="rc-opts">${ins.map(k=>`<span class="tagmini">${(INSURANCE_TYPES.find(t=>t.key===k)||{}).name||k}</span>`).join('')}</div>`:''}
+        ${missing.length?`<div class="rc-mems-mini" style="color:#b9651f">缺：${missing.map(t=>t.name).join('、')}</div>`:''}
+      </div>`;
+    });
+    s+='</div>';
+
+    // ===== 专业诊断：结合测算数据给出量化建议 =====
+    const p=plan||{}, mm=(res&&res.metrics)||{};
+    const daily=p.dailyAnnual||0;
+    let debt=0;
+    if(p.housing==='ownLoan') debt=(p.ownLoanCommBal||0)+(p.ownLoanGjjBal||0);
+    else if(p.housing==='buy') debt=(p.loanComm||0)+(p.loanGjj||0);
+    const age=p.currentAge||0;
+    const wb=(p.wageBands||[]).find(b=>age>=b.from && age<b.to);
+    const income=wb?wb.annual:0;
+    const kids=(p.children&&p.children.kids)||[];
+    const parents=p.parents||[];
+    const y0=p.startYear||new Date().getFullYear();
+    const pillar=members.filter(m=>m.key==='self'||m.key==='spouse');
+    const pillarIns=k=>pillar.some(m=>(m.insured||[]).includes(k));
+    const parentsArr=members.filter(m=>m.key.indexOf('parent-')===0);
+    const childrenArr=members.filter(m=>m.key.indexOf('child-')===0);
+    const diag=[];
+
+    // ① 家庭支柱（本人/配偶）：最优先，量化保额
+    const pillarMissKeys=['life','critical','medical','accident'].filter(k=>!pillarIns(k));
+    if(pillar.length && pillarMissKeys.length){
+      const lifeAmt=Math.round(debt+daily*10);
+      const critAmt=Math.round(50+income*3);
+      const accAmt=Math.round(income*10);
+      let d=`<div class="diag-item"><b>① 家庭支柱（本人 / 配偶）——最优先</b>`;
+      const ctx=[age+' 岁'];
+      if(income>0) ctx.push('年收入约 '+income+' 万');
+      if(daily>0) ctx.push('家庭年开支约 '+daily+' 万');
+      if(debt>0) ctx.push('尚余负债约 '+debt+' 万');
+      d+=`<div class="diag-ctx">${ctx.join('、')}。${mm.firstNegative?('测算显示你的资产在 <b>'+mm.firstNegative.age+' 岁</b>首次转负：若支柱在此之前身故、重疾或大额医疗，收入断流叠加治疗照护支出，缺口会提前到来。'):''}</div>`;
+      d+='<ul class="diag-list">';
+      if(!pillarIns('life')) d+=`<li><b>寿险（定期 / 终身）</b>：建议保额 ≈ ${debt>0?('负债 '+debt+' 万 + 年开支 '+daily+' 万 × 10'):('年开支 '+daily+' 万 × 10')} = <b>${lifeAmt} 万</b>（覆盖${debt>0?'债务 + ':''}家庭 10 年过渡）</li>`;
+      if(!pillarIns('critical')) d+=`<li><b>重大疾病险</b>：建议保额 ≈ 50 万治疗费 + 年收入 ${income} 万 × 3 = <b>${critAmt} 万</b>（治疗 + 康复期收入中断）</li>`;
+      if(!pillarIns('medical')) d+=`<li><b>医疗险</b>：百万医疗（报销型）一份，补大额住院与社保外用药，花小钱堵大风险</li>`;
+      if(!pillarIns('accident')) d+=`<li><b>意外险</b>：建议保额 ≈ 年收入 ${income} 万 × 10 = <b>${accAmt} 万</b>（意外身故 / 伤残）</li>`;
+      d+='</ul></div>';
+      diag.push(d);
+    }
+    // ② 父母高龄保障
+    if(parentsArr.length){
+      const parentAges=parents.map(pt=>y0-pt.birthYear).filter(a=>a>=0);
+      const missMed=!parentsArr.some(m=>(m.insured||[]).includes('medical'));
+      const missCare=!parentsArr.some(m=>(m.insured||[]).includes('care'));
+      if(missMed||missCare){
+        let d=`<div class="diag-item"><b>② 父母高龄保障</b>`;
+        d+=`<div class="diag-ctx">${parentAges.length?('父母已约 '+parentAges.join('、')+' 岁'):'父母'}，进入医疗自费与失能照护的高发区间，是家庭最易被低估的大额支出。</div>`;
+        d+='<ul class="diag-list">';
+        if(missMed) d+=`<li><b>医疗险</b>：如投保年龄允许，补百万医疗 / 防癌医疗险；高龄也可考虑「惠民保」类普惠医疗兜底</li>`;
+        if(missCare) d+=`<li><b>长期护理险 / 护理储备</b>：应对失能照护（月均照护成本约 0.5–1.5 万），或提前设专项护理金</li>`;
+        d+='</ul></div>';
+        diag.push(d);
+      }
+    }
+    // ③ 子女保障
+    if(childrenArr.length){
+      const childAges=kids.map(k=>{ const a=y0-k.startYear; return a>=0?(a+' 岁'):'计划出生'; });
+      const missCrit=!childrenArr.some(m=>(m.insured||[]).includes('critical'));
+      const missSave=!childrenArr.some(m=>(m.insured||[]).includes('saving'));
+      if(missCrit||missSave){
+        let d=`<div class="diag-item"><b>③ 子女保障</b>`;
+        d+=`<div class="diag-ctx">${kids.length} 个孩子${childAges.length?('（'+childAges.join('、')+'）'):''}。少儿重疾治疗费高、但治愈率也高，教育金断供则影响成长路径。</div>`;
+        d+='<ul class="diag-list">';
+        if(missCrit) d+=`<li><b>少儿重疾险</b>：保额 50–80 万（覆盖白血病等少儿高发重疾）</li>`;
+        if(missSave) d+=`<li><b>教育金</b>：按大学 / 留学目标定投储备，专款专用</li>`;
+        d+='</ul></div>';
+        diag.push(d);
+      }
+    }
+    // ④ 养老 / 长寿储备
+    if(pillar.length && !pillarIns('saving') && (mm.firstNegative || p.targetAge>=85)){
+      let d=`<div class="diag-item"><b>④ 养老 / 长寿储备</b>`;
+      d+=`<div class="diag-ctx">${mm.firstNegative?('测算到 '+p.targetAge+' 岁存在缺口（'+mm.firstNegative.age+' 岁转负），退休后收入骤降、活太久钱不够是真实风险。'):('测算终点 '+p.targetAge+' 岁，长寿风险需提前对冲。')}</div>`;
+      d+='<ul class="diag-list"><li><b>商业养老年金 / 增额终身寿</b>：提供与生命等长的现金流，对冲「活太久、钱不够」的长寿风险</li></ul></div>';
+      diag.push(d);
+    }
+
+    if(diag.length){
+      s+=`<div class="diag-box"><div class="diag-title">专业诊断与建议</div>${diag.join('')}</div>`;
+    } else {
+      s+=`<div class="notebox" style="margin-top:14px">💡 全家关键险种已较齐全，建议定期检视保额是否随收入、负债与家庭开支增长而补足。</div>`;
+    }
+    if(ans.worry) s+=`<p class="muted" style="margin-top:10px">你的其他担忧：「${ans.worry}」。</p>`;
+    box.innerHTML=s;
+  }
+  function renderCompare(cmp){
+    const base=cmp.base.metrics.finalEnd,pess=cmp.pessimistic.metrics.finalEnd,opt=cmp.optimistic.metrics.finalEnd;
+    $('#cmp').innerHTML=[{t:'当前方案终点',v:fmt(base),c:cls(base)},{t:'悲观情景',v:fmt(pess),c:cls(pess)},{t:'乐观情景',v:fmt(opt),c:cls(opt)}].map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div></div>`).join('');
+    const neg=m=> m.allPositive ? '全程为正（不转负）' : (m.firstNegative ? `约 ${m.firstNegative.age} 岁首次转负` : '未明确');
+    let note=`悲观情景（收益减半&生活开支+15%）下，终点变动约 <b>${fmt(cmp.deltaPess)}</b>，${neg(cmp.pessimistic.metrics)}；乐观情景（收益+1%&生活开支-10%）下，变动约 <b>${fmt(cmp.deltaOpt)}</b>，${neg(cmp.optimistic.metrics)}。`;
+    note+='<br><span style="color:#52606d">此摆幅即你的计划对「收益与开支假设」的敏感度——假设越乐观，余量越大；越悲观，缺口越早到来。</span>';
+    $('#cmp-note').innerHTML=note;
+  }
+  function renderChildFork(resChild, resNo, ans){
+    const box=$('#childfork-kpis');
+    const withC=resChild.metrics.finalEnd, noC=resNo.metrics.finalEnd;
+    const delta=+(withC-noC).toFixed(1);
+    const diff = delta<0 ? ('多消耗约 '+fmt(-delta)) : (delta>0?('反而多出约 '+fmt(delta)):'基本持平');
+    const myIsChild = (ans.childrenPlan!=='no'); // 选了生娃 / 已有娃 → 生娃路径是用户选择
+    box.innerHTML=
+      '<div class="kpi"><div class="t">生娃路径终点'+(myIsChild?' · 你的选择':'')+'</div><div class="v '+cls(withC)+'">'+fmt(withC)+'</div></div>'+
+      '<div class="kpi"><div class="t">不生娃路径终点'+(!myIsChild?' · 你的选择':'')+'</div><div class="v '+cls(noC)+'">'+fmt(noC)+'</div></div>'+
+      '<div class="kpi"><div class="t">生娃带来的差额</div><div class="v '+(delta<0?'neg':'pos')+'">'+diff+'</div></div>';
+    const note=$('#childfork-note');
+    note.innerHTML='差额 = 生娃路径终点 − 不生娃路径终点。差额为负，说明生娃在财务上「吞掉」了这部分余额——它不评价该不该生，只把代价摆出来，配合下方权重一起看。差额为正则生娃并未拖累终点（可能因抚养期现金流被其它被动收入覆盖）。';
+  }
+  function renderHomeFork(plan, res, resRent, resBuy, ans){
+    const box=$('#homefork');
+    const cur=res.metrics.finalEnd;
+    let other, curLabel, otherLabel;
+    if(plan.housing==='buy'){ other=resRent.metrics.finalEnd; curLabel='含购房规划终点'; otherLabel='改为一直租房终点'; }
+    else if(plan.housing==='rent'){ other=resBuy.metrics.finalEnd; curLabel='一直租房终点'; otherLabel='改为购房规划终点'; }
+    else { box.style.display='none'; return; } // 已有房（own/ownLoan）不对比购房/租房岔路
+    const delta=+(cur-other).toFixed(1);
+    box.style.display='block';
+    const diff = delta<0 ? ('多消耗约 '+fmt(-delta)) : (delta>0?('反而多出约 '+fmt(delta)):'基本持平');
+    $('#homefork-kpis').innerHTML=[
+      {t:curLabel,v:fmt(cur),c:cls(cur)},
+      {t:otherLabel,v:fmt(other),c:cls(other)},
+      {t:'住房岔路差额',v:diff,c:delta<0?'neg':'pos'}
+    ].map(i=>`<div class="kpi"><div class="t">${i.t}</div><div class="v ${i.c}">${i.v}</div></div>`).join('');
+    $('#homefork-note').innerHTML='差额为负，说明购房在财务上「吞掉」了这部分余额——它不评价该不该买，只把代价摆出来；差额为正则购房并未拖累终点（可能因还贷结束后不再付租金、或房产价值未计入）。注意模型不含房产净值，纯看现金流。';
+  }
+  function renderSynthesisInit(end,cmp){ window.__end={end,cmp}; renderSynthesis(); }
+  // ---- 综合结论：纯财务视角，不再含主观权重打分 ----
+  function renderSynthesis(){
+    if(!window.__end) return;
+    const {end, cmp}=window.__end;
+    let s=`<b>① 财务侧：</b>测算终点约 <b>${fmt(end)}</b>。`;
+    s+=`<br><br><b>② 一句话：</b>数字是你的"风险日历"——它告诉你每条路的财务代价，但<b>不替你回答"想要哪种生活"</b>。生娃与否、买房与否这类人生岔路，模型只帮你把账算清、把纠结摊开；至于哪条路更值得，最终取决于你在钱之外真正在意的东西。`;
+    s+=`<br><br><span style="color:#52606d">最后选哪条路，永远是你自己的。模型只帮你把账算清、把纠结摊开。</span>`;
+    $('#synthesis').innerHTML=s;
+  }
+  // ---------- 投资与被动收入 · 可视化 ----------
+  function buildTrendChart(vals, years){
+    const W=680,H=210,padL=12,padR=12,padT=14,padB=26;
+    const n=vals.length; if(!n) return '<div class="invest-empty">无数据</div>';
+    const maxV=Math.max(1, ...vals);
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const X=i=> n>1 ? padL + i*plotW/(n-1) : padL+plotW/2;
+    const Y=v=> padT + plotH - (v/maxV)*plotH;
+    let grid='';
+    for(let g=0; g<=4; g++){ const y=padT + plotH*g/4; const v=(maxV*(4-g)/4); grid+=`<line class="grid" x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}"/><text class="axis" x="${padL+2}" y="${(y-3).toFixed(1)}">${v.toFixed(0)}</text>`; }
+    const li=[0, Math.floor((n-1)/2), n-1].filter((v,i,a)=>a.indexOf(v)===i);
+    const xlab=li.map(i=>`<text class="axis" x="${X(i).toFixed(1)}" y="${H-7}" text-anchor="middle">${years[i]}</text>`).join('');
+    let peakI=0; for(let i=1;i<n;i++){ if(vals[i]>vals[peakI]) peakI=i; }
+    const pts=vals.map((v,i)=> X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+    const area=`M${X(0).toFixed(1)},${(padT+plotH).toFixed(1)} L`+pts.replace(/ /g,' L')+` L${X(n-1).toFixed(1)},${(padT+plotH).toFixed(1)} Z`;
+    const peak=(peakI===0&&vals[0]===0)?'':`<circle cx="${X(peakI).toFixed(1)}" cy="${Y(vals[peakI]).toFixed(1)}" r="3.6" fill="var(--pass)" stroke="#fff" stroke-width="1.5"/>`;
+    return `<svg class="inv-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="被动收入趋势折线图">${grid}<path class="area" d="${area}"/>${peak}<polyline class="line" points="${pts}"/>${xlab}</svg>`;
+  }
+  function buildDonut(dist, total){
+    if(!total || total<=0 || !dist.length) return '<div class="dist-empty">暂无被动收入来源（请在问卷「投资和被动收入」中填写收益金额）。</div>';
+    const r=46,cx=60,cy=60,C=2*Math.PI*r;
+    let acc=0, segs='';
+    dist.forEach(d=>{ const f=d.cp/total; const off=-acc*C; segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" stroke="${d.color}" stroke-dasharray="${(f*C).toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`; acc+=f; });
+    const legend=dist.map(d=>`<div class="li"><span class="sw" style="background:${d.color}"></span><span class="nm">${d.nm}</span><span class="vl">${d.cp.toFixed(1)} 万 · ${(d.cp/total*100).toFixed(0)}%</span></div>`).join('');
+    return `<div class="donut-wrap"><svg class="donut" viewBox="0 0 120 120" role="img" aria-label="收益来源分布环形图"><circle class="bg" cx="60" cy="60" r="${r}"/><circle cx="60" cy="60" r="${r}" fill="none"/>${segs}<text x="60" y="56" text-anchor="middle" style="font-size:15px;font-weight:700;fill:var(--ink)">${total.toFixed(0)}</text><text x="60" y="73" text-anchor="middle" style="font-size:9px;fill:var(--sub)">万累计</text></svg><div class="legend">${legend}</div></div>`;
+  }
+  function renderInvest(res, ans){
+    const box=$('#sec-invest'); if(!box) return;
+    const items=(ans.items||[]).filter(it=> (it.investAmount>0)||(it.payoutAmount>0));
+    const palette=['#2f6f8f','#1f9d55','#e09f3e','#3b82c4','#9b59b6','#d64545'];
+    let cumPass=0, cumInv=0; const dist=items.map((it,i)=>{
+      const nm = it.name==='其它' ? (it.customName||'其它') : it.name;
+      const cp=(it.payoutAmount||0)*(it.payoutYears||0);
+      const ci=(it.investAmount||0)*(it.investYears||0);
+      cumPass+=cp; cumInv+=ci;
+      return {nm, cp, ci, color:palette[i%palette.length]};
+    });
+    const passVals=res.rows.map(r=>r.passive||0);
+    const ratio = cumInv>0 ? (cumPass/cumInv) : null;
+    $('#inv-kpis').innerHTML = [
+      ['累计被动收入', cumPass.toFixed(1)+' 万', 'pos'],
+      ['累计投入', cumInv.toFixed(1)+' 万', ''],
+      ['投入产出比', ratio==null?'—':(ratio.toFixed(2)+'×'), (ratio!=null&&ratio>=1)?'pos':'warn'],
+    ].map(k=>`<div class="kpi"><div class="t">${k[0]}</div><div class="v ${k[2]}">${k[1]}</div></div>`).join('');
+    $('#invTrend').innerHTML = buildTrendChart(passVals, res.rows.map(r=>r.year));
+    let peakI=0; for(let i=1;i<passVals.length;i++){ if(passVals[i]>passVals[peakI]) peakI=i; }
+    $('#invPeak').textContent = (passVals[peakI]>0)? ('峰值 '+passVals[peakI].toFixed(1)+' 万 @ '+res.rows[peakI].year) : '—';
+    $('#invDist').innerHTML = buildDonut(dist, cumPass);
+    // 加载动效
+    box.classList.add('reveal');
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ box.classList.add('in'); const c=$('#invTrend').querySelector('.inv-chart'); if(c) c.classList.add('drawn'); }); });
+  }
+
+  function renderAssump(plan,ans){
+    const p=plan; const hn={own:'已有房(无房贷)',ownLoan:'已有房(还贷中)',rent:'一直租房',buy:'计划购房'}[p.housing];
+    const itemStr = p.items.length? p.items.map(it=>{
+      const nm = it.name==='其它'?('其它:'+it.customName):it.name;
+      const inv = it.investAmount>0 ? (it.investAmount+'万/年('+it.investStartYear+'起'+it.investYears+'年)') : '无投入';
+      const pay = (it.payoutType==='monthly'?('按月'+(it.payoutAmount)+'万/月'):it.payoutType==='yearly'?('按年'+(it.payoutAmount)+'万/年'):('一次性'+(it.payoutAmount)+'万'))+'（'+it.payoutStartYear+' 年起 '+it.payoutYears+' 年）';
+      return nm+'：'+inv+' / 收益 '+pay;
+    }).join('；') : '无';
+    const childStages = p.children.stages || [];
+    const stageRef = childStages.length ? ('分年龄段参考值（万/年）：'+childStages.map(s=>s.annual).join('/')+'（孕产→大学）') : '';
+    const kidDetail = (k)=> k.startYear+' 出生'+(k.years>0?('，抚养上限 '+k.years+' 年'):'')
+      + (k.stages&&k.stages.length?('，阶段费(万/年):'+k.stages.map(s=>s.annual).join('/')):'');
+    const childStr = (p.children.plan==='no' || (p.children.kids && p.children.kids.length===0 && p.children.count<=0)) ? '不计划' :
+      (p.children.kids && p.children.kids.length) ?
+        ('生娃 '+p.children.kids.length+' 孩：'+p.children.kids.map(kidDetail).join('；')+(p.children.incomeLoss>0?('；收入中断损失 '+p.children.incomeLoss+' 万/娃'):'')) :
+        (p.children.count+' 孩 · '+p.children.startYear+' 年起'+(p.children.incomeLoss>0?(' · 收入中断损失 '+p.children.incomeLoss+' 万'):''));
+    const prepayText = (wh) => {
+      const ps = (p.prepays || []).filter(wh);
+      if (!ps.length) return '';
+      const tag = x => (x.which==='gjj'?'公积金':x.which==='comm'?'商贷':'房贷') + ' ' + x.amount + '万@' + x.year + '年'
+        + (x.mode==='reduceTerm' ? '（减少还款年限，月供不变）' : '（保持还款年限，月供减少）');
+      return '；提前还贷：' + ps.map(tag).join('、');
+    };
+    let housingStr = hn;
+    if (p.housing==='ownLoan') housingStr += ' 商贷余额'+p.ownLoanCommBal+'万@'+(p.ownLoanCommRate*100)+'%, 公积金余额'+p.ownLoanGjjBal+'万@'+(p.ownLoanGjjRate*100)+'%, 商贷月供'+p.ownCommMonthly.toFixed(2)+'+公积金月供'+p.ownGjjMonthly.toFixed(2)+'='+p.ownLoanMonthly.toFixed(2)+'万/月, 至 '+p.loanEndYear+' 年' + prepayText(x=>x.which==='comm'||x.which==='gjj');
+    else if (p.housing==='rent') housingStr += ' 房租'+p.rentMonthly+'万/月,年增2%';
+    else if (p.housing==='buy') {
+      housingStr += ' 总额'+p.buyTotal+'万/首付'+p.downPayment+'万/公积金贷'+p.loanGjj+'万/商贷'+p.loanComm+'万/'+p.loanYears+'年@公积金'+(p.gjjRate*100)+'%+商贷'+(p.commRate*100)+'%, 原始月供'+p.monthlyPayment.toFixed(2)+'万/月, '+p.buyYear+' 年购房, 购房前租金'+p.preBuyRentMonthly+'万/月';
+      if (p.prepays && p.prepays.length) housingStr += '；提前还贷：'+p.prepays.map(x=>(x.which==='gjj'?'公积金':x.which==='comm'?'商贷':'房贷')+' '+x.amount+'万@'+x.year+'年'+(x.mode==='reduceTerm'?'（减少还款年限，月供不变）':'（保持还款年限，月供减少）')).join('、');
+    }
+    const rows=[
+      ['出生日期',ans.dob+'（'+p.currentAge+' 岁）'],['起始年份',p.startYear],['当前年龄',p.currentAge+' 岁'],['起点本金',p.startBalance+' 万'],['年化收益率',Math.round(p.returnRate*1000)/10+'%'],['目标年龄',p.targetAge+' 岁'],
+      ['收入类型',{stable:'稳定工作',freelance:'自由职业',uncertain:'暂时失业/不确定(按无工资)',none:'无劳动收入'}[p.incomeType]],
+      ['税后工资(按年龄段 万/年)', (p.incomeType==='stable'||p.incomeType==='freelance')
+        ? (p.wageBands.length ? p.wageBands.map(b=>{const to=b.to>99?'退休前':b.to+'岁'; return b.from+'–'+to+'岁:'+b.annual;}).join('；') : '0')
+        : '0'],
+      ['退休/停年收入年龄',p.retireAge+' 岁'],
+      ['投资和被动收入', itemStr],
+      ['住房',housingStr],
+      ['基本生活(总数,年增2%)',p.dailyAnnual+' 万/年(当前水平)'],
+      ['生育规划', childStr],
+      ['父母赡养', (p.parents && p.parents.length)
+        ? p.parents.map(pt=> pt.label+' '+pt.birthYear+' 年生（现 '+(p.startYear-pt.birthYear)+' 岁）至 '+pt.stopAge+' 岁，阶段费(万/年)：'+pt.stages.map(s=>s.annual).join('/'))
+        : ((ans.parentsPlan==='no') ? '暂无赡养支出' : '无')],
+      ['一次性进账', (p.lumps && p.lumps.length) ? p.lumps.map(l=>l.cat+' '+l.amount+' 万 @ '+l.year+' 年').join('；') : '无'],
+    ];
+    $('#assump').innerHTML='<tr><th class="fy">项目</th><th>取值</th></tr>'+rows.map(r=>`<tr><td class="fy">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  }
+
+  $('#run').addEventListener('click',run);
+  $('#back').addEventListener('click',()=>{ $('#results').style.display='none'; $('#survey').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+<button id="toTop" title="回到顶部" aria-label="回到顶部">↑</button>
+</body>
+</html>
