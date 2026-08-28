@@ -1857,7 +1857,7 @@
         parts.push(`起点本金再备 <b>${balShown} 万</b>`);
       }
       if(parts.length){
-        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，任选其一：${parts.join('；或 ')}。</span></div>`;
+        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，任选其一：${parts.join('；或')}。</span></div>`;
         // 压开支这条路走不通时，主动说明为什么没给开支线
         if(safeSpend==null || safeSpend<=0.05){
           h+=`<div class="vt-line"><span class="vt-k">提示</span><span>压开支这条路走不通——即便压到接近 0 仍不够，压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议看下方「决策对照」逐项关掉比较。</span></div>`;
