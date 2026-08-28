@@ -1768,10 +1768,22 @@
      杠杆复用 run() 已有的模式：Object.assign 出变体 plan 再 project，其他条件不变 */
   function leverPlans(plan){
     return [
-      {name:'晚 3 年退休', plan:Object.assign({},plan,{retireAge:Math.min((plan.retireAge||60)+3,80)})},
       {name:'年开支降 10%', plan:Object.assign({},plan,{dailyAnnual:(plan.dailyAnnual||0)*0.9})},
+      {name:'起点本金 +20%', plan:Object.assign({},plan,{startBalance:(plan.startBalance||0)*1.2})},
       {name:'年化收益 +0.5%', plan:Object.assign({},plan,{returnRate:(plan.returnRate||0)+0.005})}
     ];
+  }
+  /* 反解「安全线」：二分找出刚好让终点余额回到 0 的临界值。
+     increasing=true 表示该参数越大越安全（如本金）；false 表示越小越安全（如开支）。 */
+  function solveLimit(plan,key,lo,hi,increasing){
+    let best=null;
+    for(let i=0;i<26;i++){
+      const mid=(lo+hi)/2;
+      let e; try{ e=FPEngine.project(Object.assign({},plan,{[key]:mid})).metrics.finalEnd; }catch(err){ break; }
+      if(e>=0){ best=mid; if(increasing) hi=mid; else lo=mid; }
+      else { if(increasing) lo=mid; else hi=mid; }
+    }
+    return best;
   }
   function renderTopVerdict(plan,res){
     const box=$('#vtBody'); if(!box) return;
@@ -1788,6 +1800,30 @@
       const fn=m.firstNegative;
       h+=`<div class="vt-line"><span class="vt-k">结论</span><span>${fn?`按当前假设，资金将在 <b>${fn.age} 岁</b>首次转负（距今 ${Math.max(0,fn.age-curAge)} 年）。`:'按当前假设，资金在测算区间内<b>无法覆盖支出</b>。'}</span></div>`;
       h+=`<div class="vt-line"><span class="vt-k">缺口</span><span>到 ${m.finalAge} 岁约 <b>${fmt(-m.gapAtTarget)}</b>${yTxt(m.gapAtTarget)?`，${yTxt(m.gapAtTarget)}`:''}。</span></div>`;
+      // 反解两条安全线：节流目标（开支上限）与开源目标（还差多少本金）
+      const curDaily=plan.dailyAnnual||0, curBal=plan.startBalance||0;
+      const hiDaily=Math.max(curDaily*4,100), hiBal=Math.max(curBal*8,3000);
+      const safeSpend=solveLimit(plan,'dailyAnnual',0,hiDaily,false);
+      const needBal=solveLimit(plan,'startBalance',0,hiBal,true);
+      const parts=[];
+      // 显示值一律偏向安全侧：开支上限向下取整（压得更低才够），本金缺口向上取整（备得更多才够）
+      const spendShown = safeSpend!=null ? Math.floor(safeSpend*10)/10 : null;
+      const balShown = needBal!=null ? Math.ceil(needBal-curBal) : null;
+      if(spendShown!=null && spendShown>0.05 && spendShown<curDaily-0.05){
+        parts.push(`年开支压到 <b>${spendShown.toFixed(1)} 万</b>以内（再降 ${(curDaily-spendShown).toFixed(1)} 万）`);
+      }
+      if(balShown!=null && balShown>0.5 && needBal<hiBal*0.98){
+        parts.push(`起点本金再备 <b>${balShown} 万</b>`);
+      }
+      if(parts.length){
+        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>要撑到 ${m.finalAge} 岁，二选一：${parts.join('，或 ')}。</span></div>`;
+      }else if(safeSpend!=null && safeSpend<=0.05){
+        h+=`<div class="vt-line"><span class="vt-k">怎么补</span><span>即便把年开支压到接近 0 仍会出现缺口，说明压力主要来自<b>住房 / 生育 / 赡养</b>等刚性支出，建议先看下方「决策对照」逐项关掉比较。</span></div>`;
+      }
+      if(fn){
+        const yrs=Math.max(0,fn.age-curAge);
+        h+=`<div class="vt-line"><span class="vt-k">时间</span><span>距首次转负还有 <b>${yrs} 年</b>${yrs<5?'，窗口偏紧，建议优先处理':''}。</span></div>`;
+      }
     }
     const levers=[];
     leverPlans(plan).forEach(L=>{
