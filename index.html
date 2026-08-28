@@ -422,6 +422,35 @@
     .export-bar .exp-actions{grid-template-columns:1fr}
   }
 
+  /* ==========================================================
+     问卷信息架构 —— 分区去数字化（图标）、可折叠、完成度、问题编号徽章
+     层级：分区图标+标题(16.5/700) > 问题徽章+标题(14.5/600) > 注释(12/400)
+     ========================================================== */
+  .qg-head{display:flex;align-items:center;gap:12px;margin:0 -10px 14px;padding:10px;border-bottom:1px solid var(--line);border-radius:10px;cursor:pointer;user-select:none;transition:background-color var(--dur) var(--ease)}
+  .qg-head:hover{background:var(--soft)}
+  .qg-head:active{background:#e3edf3;transition-duration:.08s}
+  .qg-head:focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
+  /* 分区用语义图标，彻底避开与问题编号 1-10 的混淆 */
+  .qg-icon{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--sd3)}
+  .qg-icon svg{width:18px;height:18px}
+  .qg-main{flex:1;min-width:0}
+  .qg-title{font-size:16.5px;font-weight:700;color:var(--ink);line-height:1.35}
+  .qg-desc{font-size:12.5px;color:var(--sub);margin-top:3px;line-height:1.55}
+  .qg-meta{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .qg-count{font-size:12px;color:var(--sub);background:var(--soft);border:1px solid var(--line);padding:3px 9px;border-radius:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .qg-count.done{background:#eaf7ef;color:#1b7f3b;border-color:#bfe3cc}
+  .qg-count.optional{background:#fff8ec;color:#a8730f;border-color:#f0dcb4}
+  .qg-caret{flex:0 0 auto;width:18px;height:18px;color:var(--sub);transition:transform var(--dur) var(--ease)}
+  .qgroup.collapsed .qg-caret{transform:rotate(-90deg)}
+  .qgroup.collapsed .qg-body{display:none}
+  .qgroup.collapsed .qg-head{border-bottom-color:transparent;margin-bottom:0}
+  /* 问题编号：白底描边小徽章，与分区的实心图标块在形状/色彩/尺寸上完全区分 */
+  .q .label .qnum{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;margin-right:7px;border-radius:6px;background:#fff;color:var(--brand);border:1px solid var(--brand2);font-size:11.5px;font-weight:600;font-style:normal;vertical-align:2px}
+  /* 排版层级重排：问题标题降一级，注释降饱和并放宽行距 */
+  .q .label{font-weight:600;font-size:14.5px;margin-bottom:10px;display:block;line-height:1.5;color:var(--ink)}
+  .q .label small{font-weight:400;color:var(--sub);font-size:12px;display:block;margin:5px 0 0;line-height:1.6}
+  .surveynav .sn-chip svg{width:14px;height:14px;flex:0 0 auto}
+
   /* ===== 打印（导出 PDF）样式：只打印结果区 ===== */
   @media print{
     body{background:#fff}
@@ -456,7 +485,7 @@
 
     <div class="qgroup" id="grp-1">
       <div class="qg-head">
-        <span class="qg-num">1</span>
+        <span class="qg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
         <div><div class="qg-title">基础与时间规划</div><div class="qg-desc">出生日期、退休年龄与测算终点</div></div>
       </div>
 
@@ -498,7 +527,7 @@
 
     <div class="qgroup" id="grp-2">
       <div class="qg-head">
-        <span class="qg-num">2</span>
+        <span class="qg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
         <div><div class="qg-title">收入与资产投入</div><div class="qg-desc">当前资产与收益预期、劳动收入、一次性大额进账，以及各项投资与被动收入来源</div></div>
       </div>
 
@@ -563,7 +592,7 @@
 
     <div class="qgroup" id="grp-3">
       <div class="qg-head">
-        <span class="qg-num">3</span>
+        <span class="qg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <div><div class="qg-title">住房 · 生活 · 生育 · 赡养</div><div class="qg-desc">每年基本生活开支、居住安排、生育这条人生岔路的财务代价，以及父母的赡养支出</div></div>
       </div>
 
@@ -679,7 +708,7 @@
 
     <div class="qgroup" id="grp-4">
       <div class="qg-head">
-        <span class="qg-num">4</span>
+        <span class="qg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
         <div><div class="qg-title">风险保障评估</div><div class="qg-desc">按家庭成员勾选已配置的保险——留空即潜在缺口</div></div>
       </div>
 
@@ -839,7 +868,16 @@
   function groupComplete(id){
     const v = id2 => { const e=document.getElementById(id2); return e?String(e.value).trim():''; };
     if(id==='grp-1'){ return v('dob')!=='' && v('retireAge')!=='' && v('target')!==''; }
-    if(id==='grp-2'){ const list=document.getElementById('itemList'); if(!(v('assets')!=='' && v('ret')!=='' && list && list.children.length>0)) return false; if($('#ret').value==='custom'){ return v('retCustom')!==''; } return true; }
+    if(id==='grp-2'){
+      const list=document.getElementById('itemList');
+      if(!(v('assets')!=='' && v('ret')!=='' && list && list.children.length>0)) return false;
+      if($('#ret').value==='custom'){ return v('retCustom')!==''; }
+      // 一次性大额进账在本分区，added-row 未填则不算完成
+      for(const r of $$('#lumpList .lumprow')){
+        if(!r.querySelector('.lamt').value || !r.querySelector('.lyear').value) return false;
+      }
+      return true;
+    }
     if(id==='grp-3'){
       const h=(document.querySelector('input[name=housing]:checked')||{}).value; if(!h) return false;
       if(h==='buy' || h==='rent'){
@@ -852,31 +890,87 @@
       return v('dailyTotal')!=='';
     }
     if(id==='grp-4'){
-      const rows=$$('#lumpList .lumprow');
-      if(rows.length===0) return true; // 允许无进账
-      for(const r of rows){ if(!r.querySelector('.lamt').value||!r.querySelector('.lyear').value) return false; }
-      return true;
+      // 风险保障是勾选制：至少勾一项才算「已填」；留空不阻塞，按选填处理
+      const cards=$$('#riskList .risk-card');
+      if(cards.length===0) return false;
+      return $$('#riskList input:checked').length>0;
     }
     return false;
   }
+  // 分区语义图标：与问题编号 1-10 在形态上完全区分，避免两套数字打架
+  const SG_ICON={
+    'grp-1':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    'grp-2':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    'grp-3':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    'grp-4':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+  };
   function setupSurveyNav(){
-    const groups=[{id:'grp-1',label:'基础与时间'},{id:'grp-2',label:'收入与资产'},{id:'grp-3',label:'生活·住房·赡养'},{id:'grp-4',label:'风险保障评估'}];
+    const groups=[
+      {id:'grp-1',label:'基础与时间'},
+      {id:'grp-2',label:'收入与资产'},
+      {id:'grp-3',label:'生活·住房·赡养'},
+      {id:'grp-4',label:'风险保障',optional:true}
+    ];
     const nav=document.getElementById('surveynav'); if(!nav) return;
     const chipsWrap=nav.querySelector('.sn-chips'), fill=nav.querySelector('.sn-fill'), pct=nav.querySelector('.sn-pct');
     const chips=groups.map(g=>{
       const a=document.createElement('a'); a.className='sn-chip'; a.href='#'+g.id; a.dataset.gid=g.id;
-      a.innerHTML='<span class="tick">✓</span>'+g.label;
-      a.addEventListener('click',e=>{ e.preventDefault(); const el=document.getElementById(g.id); if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'start'}); });
+      a.innerHTML='<span class="tick">✓</span>'+(SG_ICON[g.id]||'')+'<span>'+g.label+'</span>';
+      a.addEventListener('click',e=>{ e.preventDefault(); const el=document.getElementById(g.id);
+        if(!el) return;
+        if(el.classList.contains('collapsed')) el.classList.remove('collapsed');
+        if(el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'start'}); });
       chipsWrap.appendChild(a); return a;
+    });
+    // 把分区内容收进 .qg-body，折叠才能整体生效
+    groups.forEach(g=>{
+      const el=document.getElementById(g.id); if(!el || el.querySelector('.qg-body')) return;
+      const head=el.querySelector('.qg-head'); if(!head) return;
+      const body=document.createElement('div'); body.className='qg-body';
+      let n=head.nextSibling;
+      while(n){ const nx=n.nextSibling; body.appendChild(n); n=nx; }
+      el.appendChild(body);
+    });
+    // 分区头部：完成度计数 + 折叠箭头 + 可点击/可键盘折叠
+    groups.forEach(g=>{
+      const el=document.getElementById(g.id); if(!el) return;
+      const head=el.querySelector('.qg-head'); if(!head) return;
+      head.insertAdjacentHTML('beforeend','<div class="qg-meta"><span class="qg-count"></span><svg class="qg-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>');
+      head.setAttribute('role','button'); head.setAttribute('tabindex','0'); head.setAttribute('aria-expanded','true');
+      const toggle=()=>{ const c=el.classList.toggle('collapsed'); head.setAttribute('aria-expanded', c?'false':'true'); };
+      head.addEventListener('click',toggle);
+      head.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); toggle(); } });
+    });
+    // 问题编号：把文本里的 "N. " 抽成独立徽章，不再与分区编号混淆
+    $$('#survey .q .label').forEach(lb=>{
+      if(lb.querySelector('.qnum')) return;
+      const tn=lb.firstChild; if(!tn || tn.nodeType!==3) return;
+      const m=tn.nodeValue.match(/^\s*(\d+)\.\s*([\s\S]*)$/);
+      if(!m) return;
+      const b=document.createElement('i'); b.className='qnum'; b.textContent=m[1];
+      lb.insertBefore(b,tn); tn.nodeValue=m[2];
     });
     if(typeof IntersectionObserver!=='undefined'){
       const obs=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ chips.forEach(c=>c.classList.toggle('active', c.dataset.gid===e.target.id)); } }); }, {rootMargin:'-45% 0px -50% 0px'});
       groups.forEach(g=>{ const el=document.getElementById(g.id); if(el) obs.observe(el); });
     }
     function updateDone(){
+      const required=groups.filter(g=>!g.optional);
       let done=0;
-      groups.forEach((g,i)=>{ const ok=groupComplete(g.id); chips[i].classList.toggle('done',ok); if(ok) done++; });
-      const p=Math.round(done/groups.length*100);
+      groups.forEach((g,i)=>{
+        const el=document.getElementById(g.id); if(!el) return;
+        const ok=groupComplete(g.id);
+        chips[i].classList.toggle('done',ok);
+        const cnt=el.querySelector('.qg-count');
+        if(cnt){
+          const n=el.querySelectorAll('.q').length;
+          if(g.optional){ cnt.className='qg-count optional'; cnt.textContent='选填'; }
+          else if(ok){ cnt.className='qg-count done'; cnt.textContent='✓ '+n+' 题'; }
+          else { cnt.className='qg-count'; cnt.textContent=n+' 题'; }
+        }
+        if(!g.optional && ok) done++;
+      });
+      const p=Math.round(done/required.length*100);
       fill.style.width=p+'%'; if(pct) pct.textContent=p+'%';
     }
     const survey=document.getElementById('survey');
