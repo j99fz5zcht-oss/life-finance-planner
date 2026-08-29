@@ -70,13 +70,14 @@
   .kpi .t{font-size:12.5px;color:var(--sub)}
   .kpi .v{font-size:22px;font-weight:700;margin-top:4px;color:var(--ink);font-variant-numeric:tabular-nums}
   .v.pos{color:var(--pos)} .v.neg{color:var(--neg)} .v.warn{color:var(--warn)}
-  table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
-  table.tbl th,table.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
-  table.tbl th{background:var(--soft);color:var(--sub);position:sticky;top:0;font-weight:600}
+  table.tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px}
+  table.tbl th,table.tbl td{padding:6px 7px;border-bottom:1px solid var(--line);text-align:right}
+  table.tbl th{background:var(--soft);color:var(--sub);position:sticky;top:0;font-weight:600;text-align:center;border-bottom:2px solid #c7d2e0}
   table.tbl td.fy,table.tbl th.fy{text-align:left}
   .scroll{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
   .negcell{color:var(--neg);font-weight:600}
   .poscell{color:var(--pos)}
+  .tbl td.td-bal{font-weight:600}
   .tbl th.th-inc{background:#e6f4ea;color:#1b7f3b}
   .tbl th.th-exp{background:#fdeaea;color:#c0392b}
   .tbl th.th-bal{background:#e7eef6;color:#2a3f57}
@@ -85,7 +86,8 @@
   .tbl tr.total-row td{font-weight:700;background:#e2eaf3;border-top:2px solid var(--line)}
   .tbl tr.total-row td.fy{color:#33475b}
   .chartbox{height:340px;margin-top:8px}
-  .verdict{background:var(--soft);border-radius:10px;padding:16px 18px;font-size:14px}
+  .verdict{background:#fff;border:1px solid var(--line);border-left:3px solid var(--brand2);border-radius:10px;padding:15px 17px;font-size:14.5px;line-height:1.7}
+  .verdict b{color:var(--brand);font-weight:700}
   .verdict b{color:var(--brand)}
   .tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11.5px;font-weight:600;margin-left:6px}
   .tag.safe{background:#fdeaea;color:#a52a1e} .tag.risk{background:#eaf3ec;color:#186a3e} .tag.mid{background:#eef2f7;color:var(--sub);border-color:var(--line)}
@@ -609,14 +611,17 @@
   .kpis.cmp{grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;margin:10px 0 4px}
   .kpis.cmp .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-left:0;border-radius:0;padding:18px 14px;min-width:0}
   .kpis.cmp .kpi .t{font-size:12px;line-height:1.4}
-  .kpis.cmp .kpi .v{font-size:28px;margin-top:6px}
+  .kpis.cmp .kpi .v{margin-top:6px}
   .kpis.cmp .kpi:nth-child(1){border-right:2px dashed var(--line);border-left:4px solid var(--brand)}
   .kpis.cmp .kpi:nth-child(3){border-left:2px dashed var(--line);border-right:4px solid var(--gold)}
   .kpis.cmp .kpi:nth-child(2){background:var(--soft);min-width:158px}
+  .kpis.cmp .kpi{padding:14px 12px}
+  .kpis.cmp .kpi .v{font-size:18px}
+  .kpis.cmp .kpi .t{font-size:12px}
 
   /* #3 逐年表：冻结首列 + 斑马纹 + 当前年龄行高亮 */
-  .tbl th.fy{position:sticky;left:0;z-index:3;background:var(--soft)}
-  .tbl td.fy{position:sticky;left:0;z-index:2;background:var(--card);font-weight:600}
+  .tbl th.fy{position:sticky;left:0;z-index:3;background:var(--soft);box-shadow:2px 0 0 var(--line)}
+  .tbl td.fy{position:sticky;left:0;z-index:2;background:var(--card);font-weight:600;box-shadow:2px 0 0 var(--line)}
   .tbl tr:not(.total-row):nth-child(even) td:not(.fy){background:rgba(30,58,95,.035)}
   .tbl tr.cur td{background:rgba(37,99,235,.10)!important}
   .tbl tr.cur td.fy{background:rgba(37,99,235,.18)!important;box-shadow:inset 3px 0 0 var(--brand2)}
@@ -2193,7 +2198,7 @@
   function renderVerdict(res,ans){
     const m=res.metrics; let s='';
     if(m.allPositive) s+=`<b>结论：资产在测算区间内全程为正。</b> 最薄安全垫在 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}），到 ${m.finalAge} 岁仍有 ${fmt(m.finalEnd)}。`;
-    else s+=`<b>结论：存在财务缺口。</b> 预计在 <b>${m.firstNegative.age} 岁（${m.firstNegative.year} 年）</b>开始入不敷出，最困难的是 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}）。`;
+    else s+=`<b>结论：存在财务缺口。</b> 预计在 <span class="hl">${m.firstNegative.age} 岁</span>（${m.firstNegative.year} 年）开始入不敷出，最困难的是 ${m.worst.age} 岁（约 ${fmt(m.worst.value)}）。`;
     s+='<br><br><b>钱主要被什么消耗：</b>';
     const tot={}; res.rows.forEach(r=>{tot.housing=(tot.housing||0)+r.housing;tot.daily=(tot.daily||0)+r.daily;tot.investment=(tot.investment||0)+r.investment;tot.child=(tot.child||0)+r.child;tot.parent=(tot.parent||0)+(r.parent||0);});
     const order=Object.entries(tot).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]>0); const nm={housing:'住房',daily:'基本生活',investment:'投资投入',child:'生育规划',parent:'父母赡养'};
@@ -2204,7 +2209,7 @@
     const pillarMissing=[];
     ['accident','medical','critical','life'].forEach(k=>{ if(!pillar.some(m=>(m.insured||[]).includes(k))) pillarMissing.push((INSURANCE_TYPES.find(t=>t.key===k)||{}).name); });
     if(!m.allPositive && pillarMissing.length){
-      s+=`<br><br><b>风险 × 缺口联动：</b>你在 <b>${m.firstNegative.age} 岁</b>钱就会不够用，而家庭支柱（本人 / 配偶）尚未配置「${pillarMissing.join('、')}」——这类风险一旦发生（收入断流 / 大额医疗），缺口会<b>提前、加深</b>，建议优先补齐。`;
+      s+=`<br><br><b>风险 × 缺口联动：</b>你在 <span class="hl">${m.firstNegative.age} 岁</span>钱就会不够用，而家庭支柱（本人 / 配偶）尚未配置「${pillarMissing.join('、')}」——这类风险一旦发生（收入断流 / 大额医疗），缺口会<b>提前、加深</b>，建议优先补齐。`;
     }
     s+='<br><br><span style="color:#52606d">务实提醒：参数为估算，利率/收入/支出任一变动都会改变终点。把结果当「风险日历」，非确定剧本。</span>';
     $('#verdict').innerHTML=s;
@@ -2363,7 +2368,7 @@
   function renderSynthesis(){
     if(!window.__end) return;
     const {end, cmp}=window.__end;
-    let s=`<b>① 财务侧：</b>测算终点约 <b>${fmt(end)}</b>。`;
+    let s=`<b>① 财务侧：</b>测算终点约 <span class="hl">${fmt(end)}</span>。`;
     s+=`<br><br><b>② 一句话：</b>数字是你的"风险日历"——它告诉你每条路的财务代价，但<b>不替你回答"想要哪种生活"</b>。生娃与否、买房与否这类人生岔路，模型只帮你把账算清、把纠结摊开；至于哪条路更值得，最终取决于你在钱之外真正在意的东西。`;
     s+=`<br><br><span style="color:#52606d">最后选哪条路，永远是你自己的。模型只帮你把账算清、把纠结摊开。</span>`;
     $('#synthesis').innerHTML=s;
