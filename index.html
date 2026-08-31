@@ -653,11 +653,96 @@
     .skip-link{background:var(--brand)}
     .empty-card .ec-go{background:var(--brand)}
   }
+  /* ============ 邀请制门禁（前端软校验；数据仍只在本机浏览器） ============ */
+  .wrap{display:none}
+  body.gate-passed .wrap{display:block}
+  .acct-bar{display:none;align-items:center;gap:9px;margin-bottom:12px;padding:8px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--sd1);font-size:12.5px;color:var(--sub)}
+  body.gate-passed .acct-bar{display:flex}
+  .acct-bar .dot{width:7px;height:7px;border-radius:50%;background:#1f9d55;flex:none}
+  .acct-bar .ph{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+  .acct-bar .sp{flex:1}
+  .acct-out{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:7px;padding:4px 11px;font-size:12px;cursor:pointer;transition:all var(--dur) var(--ease)}
+  .acct-out:hover{border-color:var(--brand2);color:var(--brand2)}
+  .gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;background:linear-gradient(135deg,var(--brand),var(--brand2));overflow:auto}
+  .gate-card{width:100%;max-width:404px;background:var(--card);border-radius:16px;padding:28px 26px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
+  .gate-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .gate-logo{width:42px;height:42px;border-radius:12px;flex:none;background:linear-gradient(135deg,var(--brand),var(--brand2));display:flex;align-items:center;justify-content:center;color:#fff}
+  .gate-logo svg{width:22px;height:22px}
+  .gate-brand h2{margin:0;font-size:16px;color:var(--ink);letter-spacing:.2px}
+  .gate-brand .gate-sub{margin:3px 0 0;font-size:12px;color:var(--sub)}
+  .gate-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:8px;background:var(--gold);color:#1a1206;font-size:11px;font-weight:700;margin-bottom:14px}
+  .gl{display:block;margin-bottom:13px}
+  .gl span{display:block;font-size:12.5px;color:var(--sub);margin-bottom:5px;font-weight:600}
+  .gl input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14.5px;color:var(--ink);background:var(--card);font-variant-numeric:tabular-nums;letter-spacing:.6px}
+  .gl input:focus{outline:0;border-color:var(--brand2);box-shadow:var(--ring)}
+  .gate-btn{width:100%;padding:11px;border:0;border-radius:10px;background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;font-size:14.5px;font-weight:600;cursor:pointer;box-shadow:var(--sd2);transition:transform var(--dur) var(--ease)}
+  .gate-btn:active{transform:translateY(1px)}
+  .gate-btn.ghost{background:transparent;color:var(--brand2);border:1px solid var(--line);box-shadow:none;margin-top:8px}
+  .gate-msg{min-height:18px;margin:10px 0 0;font-size:12.5px;text-align:center;line-height:1.5}
+  .gate-msg.err{color:var(--pos)} .gate-msg.ok{color:var(--neg)}
+  .gate-tip{margin:12px 0 0;font-size:11.5px;color:var(--sub);line-height:1.7;text-align:center}
+  .adm-sec{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+  .adm-label{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px}
+  .adm-list{max-height:168px;overflow:auto;margin:0;padding:0;list-style:none}
+  .adm-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:13px;font-variant-numeric:tabular-nums}
+  .adm-item .ph{flex:1;font-weight:600;color:var(--ink)}
+  .adm-mini{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:6px;padding:3px 9px;font-size:11.5px;cursor:pointer;transition:all var(--dur) var(--ease)}
+  .adm-mini:hover{border-color:var(--brand2);color:var(--brand2)}
+  .adm-mini.danger:hover{border-color:var(--pos);color:var(--pos)}
+  .adm-out{width:100%;box-sizing:border-box;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:11.5px;color:var(--sub);background:var(--soft);word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .adm-empty{font-size:12px;color:var(--sub);padding:8px 0}
+  .gate-switch{margin-top:14px;text-align:center;font-size:11.5px;color:var(--sub)}
+  .gate-switch a{color:var(--brand2);cursor:pointer;text-decoration:underline}
+  @media print{ .gate,.acct-bar{display:none!important} }
 </style>
 </head>
 <body>
+<!-- ====== 邀请制门禁（未登录时覆盖全页） ====== -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-brand">
+      <div class="gate-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div>
+        <h2>人生财务 &amp; 岔路对照器</h2>
+        <p class="gate-sub">邀请制 · 需用受邀手机号登录</p>
+      </div>
+    </div>
+
+    <!-- 登录视图 -->
+    <div id="gateLogin">
+      <span class="gate-badge">邀请制访问</span>
+      <label class="gl"><span>手机号（账号）</span><input id="gatePhone" type="tel" inputmode="numeric" maxlength="11" placeholder="11 位手机号" autocomplete="username"></label>
+      <label class="gl"><span>密码</span><input id="gatePwd" type="password" inputmode="numeric" maxlength="6" placeholder="手机号后六位" autocomplete="current-password"></label>
+      <button class="gate-btn" id="gateLoginBtn">登 录</button>
+      <p class="gate-msg" id="gateMsg" role="status" aria-live="polite"></p>
+      <p class="gate-tip">初始密码为手机号<b>后六位</b>。<br>本工具为邀请制，未受邀的手机号无法登录。</p>
+    </div>
+
+    <!-- 管理视图（?admin=1 进入） -->
+    <div id="gateAdmin" style="display:none">
+      <span class="gate-badge">邀请管理</span>
+      <label class="gl"><span>受邀人手机号</span><input id="admPhone" type="tel" inputmode="numeric" maxlength="11" placeholder="输入要开通的 11 位手机号"></label>
+      <button class="gate-btn" id="admAddMe">开通并登录（我自己用）</button>
+      <button class="gate-btn ghost" id="admGenLink">生成邀请链接（发给对方）</button>
+      <p class="gate-msg" id="admMsg" role="status" aria-live="polite"></p>
+      <input class="adm-out" id="admLinkOut" readonly style="display:none">
+      <div class="adm-sec">
+        <div class="adm-label">已开通账号（<span id="admCount">0</span>）</div>
+        <ul class="adm-list" id="admList"></ul>
+      </div>
+      <p class="gate-tip">移除仅清除本机名单；已发出的邀请链接无法远程作废（纯静态站，无服务端）。</p>
+      <p class="gate-switch"><a id="gateSwitch">返回登录</a></p>
+    </div>
+  </div>
+</div>
 <a class="skip-link" href="#sec-top">跳到测算结果</a>
 <div class="wrap">
+  <div class="acct-bar" id="acctBar">
+    <span class="dot"></span>
+    <span>已登录 <span class="ph" id="acctPhone"></span></span>
+    <span class="sp"></span>
+    <button class="acct-out" id="acctOut">退出登录</button>
+  </div>
   <header class="top">
     <h1>人生财务 & 岔路对照器</h1>
     <p>一份问卷，算清三件事：① 你的钱能撑到几岁、缺口在哪；② 生娃 / 买房这些人生岔路，每条路多花或少花多少；③ 全家风险保障覆盖率、缺口在哪、优先补什么。模型只把账算清、把纠结摊开——怎么选路、怎么配保，最后都是你自己的决定。</p>
@@ -2704,6 +2789,9 @@
           const nav=doc.getElementById('resultnav'); if(nav) nav.style.display='none';
           const eb=doc.querySelector('.export-bar'); if(eb) eb.style.display='none';
           const hp=doc.querySelector('.head-progress'); if(hp) hp.style.display='none';
+          // 长图里不出现登录门禁层与账号条
+          const gt=doc.getElementById('gate'); if(gt) gt.style.display='none';
+          const ab=doc.getElementById('acctBar'); if(ab) ab.style.display='none';
           // 展开横向滚动容器，避免长表格被截断
           doc.querySelectorAll('.scroll,.stage-tbl').forEach(n=>{ n.style.overflow='visible'; n.style.maxHeight='none'; n.style.whiteSpace='normal'; });
           doc.querySelectorAll('table').forEach(t=>{ t.style.width='auto'; });
@@ -2727,6 +2815,166 @@
   // 存在暂时性死区，调用点若早于常量初始化会抛 ReferenceError 并被 try/catch 静默吞掉
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+})();
+</script>
+<script>
+/* ================= 邀请制门禁 =================
+   账号 = 手机号；初始密码 = 手机号后六位。
+   名单通过「邀请链接」写入对方本机 localStorage（纯静态站，无服务端）。
+   登录态与名单都只存本机浏览器，不做任何上传。 */
+(function(){
+  var INV_KEY='lffp.invites.v1', AUTH_KEY='lffp.auth.v1', PHONE_RE=/^1\d{10}$/;
+
+  function lsGet(k,d){ try{ var v=localStorage.getItem(k); return (v==null?d:v); }catch(e){ return d; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function lsOK(){ try{ localStorage.setItem('__lffp_t','1'); localStorage.removeItem('__lffp_t'); return true; }catch(e){ return false; } }
+  function b64u(s){ return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  function unb64u(s){ s=String(s).replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; return decodeURIComponent(escape(atob(s))); }
+  function baseUrl(){ return location.origin + location.pathname; }
+  function mask(p){ return String(p).slice(0,3)+'****'+String(p).slice(-4); }
+  function $(id){ return document.getElementById(id); }
+
+  function getInvites(){
+    try{ var a=JSON.parse(lsGet(INV_KEY,'[]')); return Array.isArray(a)?a.map(String).filter(function(p){return PHONE_RE.test(p);}):[]; }catch(e){ return []; }
+  }
+  function saveInvites(a){ lsSet(INV_KEY, JSON.stringify(a.filter(function(v,i,s){ return s.indexOf(v)===i; }))); }
+  function addInvites(list){ var a=getInvites(); (list||[]).map(String).forEach(function(p){ if(PHONE_RE.test(p) && a.indexOf(p)<0) a.push(p); }); saveInvites(a); }
+  function rmInvite(p){ saveInvites(getInvites().filter(function(x){ return x!==String(p); })); }
+
+  var qs=new URLSearchParams(location.search);
+  var isAdmin=(qs.get('admin')==='1');
+
+  function msg(el,text,kind){ if(!el) return; el.textContent=text||''; el.className='gate-msg'+(kind?' '+kind:''); }
+  function switchView(which){
+    var L=$('gateLogin'), A=$('gateAdmin'); if(!L||!A) return;
+    if(which==='admin'){ L.style.display='none'; A.style.display='block'; renderAdmin(); }
+    else { A.style.display='none'; L.style.display='block'; }
+  }
+  function unlock(phone){
+    document.body.classList.add('gate-passed');
+    var g=$('gate'); if(g) g.style.display='none';
+    var ph=$('acctPhone'); if(ph) ph.textContent=mask(phone);
+    lsSet(AUTH_KEY, JSON.stringify({phone:String(phone), t:Date.now()}));
+    renderAdmin();
+  }
+  function lock(){ document.body.classList.remove('gate-passed'); var g=$('gate'); if(g) g.style.display='flex'; }
+  function logout(){ lsDel(AUTH_KEY); location.href=baseUrl(); }
+
+  function checkLogin(phone,pwd){
+    if(!PHONE_RE.test(phone)) return '手机号格式不对（需 11 位、1 开头）。';
+    if(getInvites().indexOf(phone)<0) return '该手机号未受邀，请联系开通后再登录。';
+    if(pwd!==phone.slice(-6)) return '密码不正确（初始密码为手机号后六位）。';
+    return '';
+  }
+
+  function renderAdmin(){
+    var ul=$('admList'); if(!ul) return;
+    var list=getInvites(), c=$('admCount'); if(c) c.textContent=String(list.length);
+    ul.textContent='';
+    if(!list.length){ var li=document.createElement('li'); li.className='adm-empty'; li.textContent='暂无已开通账号'; ul.appendChild(li); return; }
+    list.forEach(function(p){
+      var li=document.createElement('li'); li.className='adm-item';
+      var sp=document.createElement('span'); sp.className='ph'; sp.textContent=mask(p);
+      var bCopy=document.createElement('button'); bCopy.className='adm-mini'; bCopy.type='button'; bCopy.textContent='复制链接';
+      bCopy.addEventListener('click',function(){ showLink([p]); });
+      var bDel=document.createElement('button'); bDel.className='adm-mini danger'; bDel.type='button'; bDel.textContent='移除';
+      bDel.addEventListener('click',function(){ rmInvite(p); renderAdmin(); msg($('admMsg'),'已移除 '+mask(p)+'（仅本机生效）。','ok'); });
+      li.appendChild(sp); li.appendChild(bCopy); li.appendChild(bDel); ul.appendChild(li);
+    });
+  }
+
+  function showLink(phones){
+    var url=baseUrl()+'?inv='+b64u(JSON.stringify(phones)), out=$('admLinkOut'); if(!out) return;
+    out.style.display='block'; out.value=url;
+    copyText(url,function(ok){
+      msg($('admMsg'), ok?'邀请链接已生成并复制，发给对方打开即可完成开通。':'邀请链接已生成，请手动复制下方链接发给对方。', ok?'ok':'');
+    });
+  }
+  function copyText(t,cb){
+    function fallback(){
+      var ok=false, out=$('admLinkOut');
+      if(out){ try{ out.select(); out.setSelectionRange(0,99999); ok=document.execCommand('copy'); }catch(e){} }
+      cb(!!ok);
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(t).then(function(){ cb(true); }, fallback); return;
+      }
+    }catch(e){}
+    fallback();
+  }
+
+  // ---- 1) 邀请链接：把名单写入本机 ----
+  var invRaw=qs.get('inv');
+  if(invRaw){
+    try{
+      var arr=JSON.parse(unb64u(invRaw));
+      if(Array.isArray(arr)){
+        var ok=arr.map(String).filter(function(p){ return PHONE_RE.test(p); });
+        if(ok.length) addInvites(ok);
+      }
+    }catch(e){}
+  }
+
+  // ---- 2) 已登录且仍受邀 -> 直接进 ----
+  var curPhone='';
+  try{ var au=JSON.parse(lsGet(AUTH_KEY,'null')); if(au && PHONE_RE.test(String(au.phone))) curPhone=String(au.phone); }catch(e){}
+  if(curPhone && getInvites().indexOf(curPhone)>=0){
+    unlock(curPhone);
+    if(isAdmin){ var g=$('gate'); if(g) g.style.display='flex'; switchView('admin'); var sw=$('gateSwitch'); if(sw) sw.textContent='返回工具'; }
+    bindUI(); return;
+  }
+  if(curPhone) lsDel(AUTH_KEY);
+
+  // ---- 3) 否则停在门禁 ----
+  lock();
+  if(isAdmin) switchView('admin');
+  if(!lsOK()){
+    var warn='当前浏览器禁用了本地存储（无痕 / 隐私模式），无法保存名单与登录态，请退出隐私模式后重试。';
+    msg($('gateMsg'),warn,'err'); msg($('admMsg'),warn,'err');
+  } else if(!isAdmin){
+    if(invRaw) msg($('gateMsg'),'邀请已激活，请用手机号登录（初始密码为手机号后六位）。','ok');
+    else if(!getInvites().length) msg($('gateMsg'),'本工具为邀请制，需通过邀请链接开通后登录。','');
+  }
+
+  bindUI();
+
+  function bindUI(){
+    var btn=$('gateLoginBtn'); if(btn && !btn.__bound){ btn.__bound=1; btn.addEventListener('click',doLogin); }
+    ['gatePhone','gatePwd'].forEach(function(id){
+      var el=$(id); if(el && !el.__bound){ el.__bound=1; el.addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); }); }
+    });
+    var b1=$('admAddMe');
+    if(b1 && !b1.__bound){ b1.__bound=1; b1.addEventListener('click',function(){
+      var p=(($('admPhone')||{}).value||'').trim();
+      if(!PHONE_RE.test(p)){ msg($('admMsg'),'请输入正确的 11 位手机号。','err'); return; }
+      addInvites([p]); renderAdmin(); msg($('admMsg'),'已开通 '+mask(p)+'，正在进入…','ok');
+      setTimeout(function(){ unlock(p); },260);
+    }); }
+    var b2=$('admGenLink');
+    if(b2 && !b2.__bound){ b2.__bound=1; b2.addEventListener('click',function(){
+      var p=(($('admPhone')||{}).value||'').trim();
+      if(!PHONE_RE.test(p)){ msg($('admMsg'),'请输入正确的 11 位手机号再生成链接。','err'); return; }
+      addInvites([p]); renderAdmin(); showLink([p]);
+    }); }
+    var sw=$('gateSwitch');
+    if(sw && !sw.__bound){ sw.__bound=1; sw.addEventListener('click',function(){
+      if(document.body.classList.contains('gate-passed')) location.href=baseUrl(); else switchView('login');
+    }); }
+    var out=$('acctOut');
+    if(out && !out.__bound){ out.__bound=1; out.addEventListener('click',logout); }
+    renderAdmin();
+  }
+
+  function doLogin(){
+    var phone=(($('gatePhone')||{}).value||'').trim();
+    var pwd=(($('gatePwd')||{}).value||'').trim();
+    var err=checkLogin(phone,pwd);
+    if(err){ msg($('gateMsg'),err,'err'); return; }
+    msg($('gateMsg'),'登录成功，正在进入…','ok');
+    unlock(phone);
+  }
 })();
 </script>
 <button id="toTop" title="回到顶部" aria-label="回到顶部">↑</button>
