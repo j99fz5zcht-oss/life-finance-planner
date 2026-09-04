@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>人生财务 & 岔路对照器</title>
 <script src="engine.js"></script>
+<script src="qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
@@ -691,6 +692,10 @@
   .adm-mini.danger:hover{border-color:var(--pos);color:var(--pos)}
   .adm-out{width:100%;box-sizing:border-box;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:11.5px;color:var(--sub);background:var(--soft);word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .adm-empty{font-size:12px;color:var(--sub);padding:8px 0}
+  .adm-qr{margin-top:12px;padding:14px 10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--soft);text-align:center}
+  .adm-qr canvas{display:block;margin:0 auto;width:170px;height:170px;border-radius:8px;background:#fff}
+  .adm-qr-cap{margin:9px 0 10px;font-size:13px;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+  .adm-qr-cap span{display:block;margin-top:3px;font-weight:400;font-size:11px;color:var(--sub)}
   .gate-switch{margin-top:14px;text-align:center;font-size:11.5px;color:var(--sub)}
   .gate-switch a{color:var(--brand2);cursor:pointer;text-decoration:underline}
   @media print{ .gate,.acct-bar{display:none!important} }
@@ -726,6 +731,11 @@
       <button class="gate-btn ghost" id="admGenLink">生成邀请链接（发给对方）</button>
       <p class="gate-msg" id="admMsg" role="status" aria-live="polite"></p>
       <input class="adm-out" id="admLinkOut" readonly style="display:none">
+      <div class="adm-qr" id="admQr" style="display:none">
+        <canvas id="admQrCanvas" aria-label="邀请二维码"></canvas>
+        <div class="adm-qr-cap" id="admQrCap"></div>
+        <button class="adm-mini" id="admQrDl" type="button">下载二维码</button>
+      </div>
       <div class="adm-sec">
         <div class="adm-label">已开通账号（<span id="admCount">0</span>）</div>
         <ul class="adm-list" id="admList"></ul>
@@ -2876,7 +2886,7 @@
     list.forEach(function(p){
       var li=document.createElement('li'); li.className='adm-item';
       var sp=document.createElement('span'); sp.className='ph'; sp.textContent=mask(p);
-      var bCopy=document.createElement('button'); bCopy.className='adm-mini'; bCopy.type='button'; bCopy.textContent='复制链接';
+      var bCopy=document.createElement('button'); bCopy.className='adm-mini'; bCopy.type='button'; bCopy.textContent='生成邀请';
       bCopy.addEventListener('click',function(){ showLink([p]); });
       var bDel=document.createElement('button'); bDel.className='adm-mini danger'; bDel.type='button'; bDel.textContent='移除';
       bDel.addEventListener('click',function(){ rmInvite(p); renderAdmin(); msg($('admMsg'),'已移除 '+mask(p)+'（仅本机生效）。','ok'); });
@@ -2884,12 +2894,56 @@
     });
   }
 
+  var lastQrPhone='';
   function showLink(phones){
     var url=baseUrl()+'?inv='+b64u(JSON.stringify(phones)), out=$('admLinkOut'); if(!out) return;
     out.style.display='block'; out.value=url;
+    lastQrPhone=String(phones[0]||'');
+    var qrOK=renderQR(url,lastQrPhone);
     copyText(url,function(ok){
-      msg($('admMsg'), ok?'邀请链接已生成并复制，发给对方打开即可完成开通。':'邀请链接已生成，请手动复制下方链接发给对方。', ok?'ok':'');
+      var t;
+      if(qrOK) t = ok ? '邀请已生成：链接已复制、二维码见下方，发给对方即可开通。'
+                      : '邀请已生成，请手动复制下方链接，或直接发下方的二维码。';
+      else     t = ok ? '链接已复制（二维码库未加载成功，刷新页面重试，或先发链接给对方）。'
+                      : '请手动复制下方链接（二维码库未加载成功，刷新页面重试）。';
+      msg($('admMsg'), t, ok?'ok':(qrOK?'':'err'));
     });
+  }
+
+  // 把邀请链接画成二维码（库缺失时优雅降级：只保留链接）
+  function renderQR(url,phone){
+    var box=$('admQr'), cv=$('admQrCanvas'); if(!box||!cv) return false;
+    var done=false;
+    try{ if(typeof qrcode==='function') done=drawQR(cv,url,400); }catch(e){ done=false; }
+    if(!done){ box.style.display='none'; return false; }
+    box.style.display='block';
+    var cap=$('admQrCap');
+    if(cap){
+      cap.textContent='';
+      var b=document.createElement('b'); b.textContent=mask(phone);
+      var s=document.createElement('span'); s.textContent='扫码开通 · 初始密码为手机号后六位';
+      cap.appendChild(b); cap.appendChild(s);
+    }
+    return true;
+  }
+  function drawQR(cv,text,size){
+    var qr=qrcode(0,'H'); qr.addData(text); qr.make();
+    var n=qr.getModuleCount(), quiet=4, total=n+quiet*2;
+    var scale=Math.max(1,Math.floor(size/total)), px=scale*total;
+    cv.width=px; cv.height=px;
+    var ctx=cv.getContext('2d'); if(!ctx) return false;
+    ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,px,px);
+    ctx.fillStyle='#1e3a5f';
+    var r=Math.min(1.6, scale*0.22);
+    for(var row=0;row<n;row++){
+      for(var col=0;col<n;col++){
+        if(!qr.isDark(row,col)) continue;
+        var x=(col+quiet)*scale, y=(row+quiet)*scale;
+        if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x,y,scale,scale,r); ctx.fill(); }
+        else ctx.fillRect(x,y,scale,scale);
+      }
+    }
+    return true;
   }
   function copyText(t,cb){
     function fallback(){
@@ -2957,6 +3011,16 @@
       var p=(($('admPhone')||{}).value||'').trim();
       if(!PHONE_RE.test(p)){ msg($('admMsg'),'请输入正确的 11 位手机号再生成链接。','err'); return; }
       addInvites([p]); renderAdmin(); showLink([p]);
+    }); }
+    var b3=$('admQrDl');
+    if(b3 && !b3.__bound){ b3.__bound=1; b3.addEventListener('click',function(){
+      var cv=$('admQrCanvas'); if(!cv) return;
+      try{
+        var a=document.createElement('a');
+        a.download='邀请二维码_'+(lastQrPhone?lastQrPhone.slice(-4):'')+'.png';
+        a.href=cv.toDataURL('image/png'); a.click();
+        msg($('admMsg'),'二维码已下载，发给对方长按识别即可开通。','ok');
+      }catch(e){ msg($('admMsg'),'下载失败，请手动复制上方链接发给对方。','err'); }
     }); }
     var sw=$('gateSwitch');
     if(sw && !sw.__bound){ sw.__bound=1; sw.addEventListener('click',function(){
