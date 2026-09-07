@@ -696,6 +696,25 @@
   .adm-qr canvas{display:block;margin:0 auto;width:170px;height:170px;border-radius:8px;background:#fff}
   .adm-qr-cap{margin:9px 0 10px;font-size:13px;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
   .adm-qr-cap span{display:block;margin-top:3px;font-weight:400;font-size:11px;color:var(--sub)}
+  /* ---- 访客记录（管理视图） ---- */
+  .vis-sec{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .vis-cfg{display:flex;gap:6px;margin-bottom:9px}
+  .vis-cfg input{flex:1;min-width:0;box-sizing:border-box;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:11.5px;color:var(--ink);background:var(--card)}
+  .vis-cfg input:focus{outline:0;border-color:var(--brand2);box-shadow:var(--ring)}
+  .vis-kpis{display:flex;gap:6px;margin-bottom:9px}
+  .vis-kpi{flex:1;text-align:center;padding:7px 3px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}
+  .vis-kpi b{display:block;font-size:16px;line-height:1.25;color:var(--brand);font-variant-numeric:tabular-nums}
+  .vis-kpi span{font-size:10.5px;color:var(--sub)}
+  .vis-list{max-height:214px;overflow:auto;margin:0;padding:0;list-style:none}
+  .vis-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;margin-bottom:5px;font-size:11.5px}
+  .vis-item .vt{flex:none;color:var(--sub);font-variant-numeric:tabular-nums}
+  .vis-item .ve{flex:none;padding:1px 6px;border-radius:5px;font-size:10.5px;font-weight:700}
+  .ve.pv{background:var(--soft);color:var(--sub)}
+  .ve.login{background:rgba(214,69,69,.13);color:var(--pos)}
+  .ve.calc{background:rgba(37,99,235,.13);color:var(--brand2)}
+  .vis-item .vp{flex:1;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .vis-item .vc{flex:none;color:var(--sub)}
+  .vis-empty{font-size:12px;color:var(--sub);padding:8px 0}
   .gate-switch{margin-top:14px;text-align:center;font-size:11.5px;color:var(--sub)}
   .gate-switch a{color:var(--brand2);cursor:pointer;text-decoration:underline}
   @media print{ .gate,.acct-bar{display:none!important} }
@@ -720,7 +739,7 @@
       <label class="gl"><span>密码</span><input id="gatePwd" type="password" inputmode="numeric" maxlength="6" placeholder="手机号后六位" autocomplete="current-password"></label>
       <button class="gate-btn" id="gateLoginBtn">登 录</button>
       <p class="gate-msg" id="gateMsg" role="status" aria-live="polite"></p>
-      <p class="gate-tip">初始密码为手机号<b>后六位</b>。<br>本工具为邀请制，未受邀的手机号无法登录。</p>
+      <p class="gate-tip">初始密码为手机号<b>后六位</b>。<br>本工具为邀请制，未受邀的手机号无法登录。<br>会记录「打开 / 登录 / 测算」行为（时间、掩码手机号、城市、设备），但<b>不上传任何测算数据</b>。</p>
     </div>
 
     <!-- 管理视图（?admin=1 进入） -->
@@ -740,7 +759,22 @@
         <div class="adm-label">已开通账号（<span id="admCount">0</span>）</div>
         <ul class="adm-list" id="admList"></ul>
       </div>
-      <p class="gate-tip">移除仅清除本机名单；已发出的邀请链接无法远程作废（纯静态站，无服务端）。</p>
+      <div class="vis-sec">
+        <div class="adm-label">访客记录</div>
+        <div class="vis-cfg">
+          <input id="visKey" type="password" placeholder="查看密钥（ADMIN_KEY）" autocomplete="off">
+          <button class="adm-mini" id="visLoad" type="button">查看</button>
+        </div>
+        <div class="vis-kpis">
+          <div class="vis-kpi"><b id="visPv">-</b><span>打开次数</span></div>
+          <div class="vis-kpi"><b id="visUv">-</b><span>独立访客</span></div>
+          <div class="vis-kpi"><b id="visLogin">-</b><span>登录次数</span></div>
+          <div class="vis-kpi"><b id="visCalc">-</b><span>测算次数</span></div>
+        </div>
+        <ul class="vis-list" id="visList"></ul>
+        <p class="gate-msg" id="visMsg" role="status" aria-live="polite"></p>
+      </div>
+      <p class="gate-tip">移除仅清除本机名单；已发出的邀请链接无法远程作废（纯静态站，无服务端）。<br>访客记录只含时间、事件、掩码手机号、城市与设备，不含任何测算数据。</p>
       <p class="gate-switch"><a id="gateSwitch">返回登录</a></p>
     </div>
   </div>
@@ -765,7 +799,7 @@
     <p class="hint">所有金额单位：万元人民币（除非特别标注）。看不懂的选项保持默认即可。</p>
     <div class="intro-bar">
       <span class="ib-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>约 3 分钟填完</span>
-      <span class="ib-item ib-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>数据只在本机浏览器，不上传</span>
+      <span class="ib-item ib-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>测算数据只在本机浏览器，不上传</span>
       <span class="ib-item" id="ibDraft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>自动保存草稿</span>
     </div>
     <div class="draft-bar" id="draftBar" role="status">
@@ -1464,7 +1498,8 @@
 
   // ---- 分年龄段养育支出阶段表（参考值，万/年；按每个娃单独填写）----
   const CHILD_STAGE_DEFS = [
-    {key:'prenatal', name:'孕产阶段',  age:'备孕 + 出生当年', from:-1, to:0,  def:4.8},
+    {key:'prenatal', name:'备孕/怀孕当年', age:'出生前 1 年',            from:-1, to:-1, def:2},
+    {key:'birth',    name:'出生当年',      age:'出生当年（生产 + 月子）', from:0,  to:0,  def:8},
     {key:'infant',   name:'幼儿阶段',  age:'1–3 岁',         from:1,  to:3,  def:3.6},
     {key:'kinder',   name:'幼儿园阶段', age:'4–6 岁',         from:4,  to:6,  def:3.0},
     {key:'primary',  name:'小学阶段',  age:'7–12 岁',        from:7,  to:12, def:2.4},
@@ -1527,7 +1562,7 @@
       const lab = (curAge>0 && d.from < curAge) ? (curAge+'–'+d.to+' 岁（本阶段剩余）') : d.age;
       return `<tr><td>${d.name}</td><td class="age">${lab}</td><td class="ref">~${d.def}</td><td><input type="number" class="kstage" data-key="${d.key}" min="0" step="0.1" placeholder="填此处"> 万/年</td></tr>`;
     }).join('');
-    const title = curAge>0 ? `（已出生，当前 ${curAge} 岁，费用计划从当前岁数起算）` : '（计划出生，从孕产阶段起算）';
+    const title = curAge>0 ? `（已出生，当前 ${curAge} 岁，费用计划从当前岁数起算）` : '（计划出生，从备孕/怀孕当年起算）';
     box.innerHTML = `<div class="stage-head" style="margin-top:0">分年龄段养育支出${title}（参考值仅展示，请在「您的填写」列按实际填）</div><table class="stage-tbl"><thead><tr><th>阶段</th><th>年龄区间</th><th>参考值(万/年)</th><th>您的填写(万/年)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
   }
   function childRow(){
@@ -1995,6 +2030,7 @@
     catch(e){ const er=$('#err'); er.textContent=(e.isDateError?'⚠ 请填写有效的出生日期':'⚠ 计算出错：'+e.message); er.classList.add('show'); return; }
     window.__curAge=R.plan.currentAge;
     renderAll(R);
+    try{ if(window.LFFPTrack) window.LFFPTrack('calc'); }catch(e){}   // 仅上报「完成一次测算」，不带任何数值
     $('#survey').style.display='none'; $('#results').style.display='block';
     // #5 关闭未填态占位卡，恢复各结果卡片
     const empty=$('#sec-empty'); if(empty) empty.style.display='none';
@@ -2872,6 +2908,27 @@
   function mask(p){ return String(p).slice(0,3)+'****'+String(p).slice(-4); }
   function $(id){ return document.getElementById(id); }
 
+  /* ---- 访客行为上报 ----
+     只发「事件」：时间、类型、掩码手机号、城市、设备。
+     绝不发送任何测算数据（收入、资产、年龄、测算结果等一律留在本机）。
+     TRACK_URL 为统计接口地址；留空则完全不上报。 */
+  var TRACK_URL='';
+  var VIS_KEY='lffp.vis.v1', VKEY='lffp.viskey.v1';
+  function getVid(){
+    var v=lsGet(VIS_KEY,'');
+    if(!v){ v='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); lsSet(VIS_KEY,v); }
+    return v;
+  }
+  function track(type,extra){
+    if(!TRACK_URL || !window.fetch) return;
+    try{
+      var body={type:type, vid:getVid()};
+      if(extra && extra.phone) body.phone=String(extra.phone);
+      fetch(TRACK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(function(){});
+    }catch(e){}
+  }
+  window.LFFPTrack=track;
+
   function getInvites(){
     try{ var a=JSON.parse(lsGet(INV_KEY,'[]')); return Array.isArray(a)?a.map(String).filter(function(p){return PHONE_RE.test(p);}):[]; }catch(e){ return []; }
   }
@@ -2881,11 +2938,12 @@
 
   var qs=new URLSearchParams(location.search);
   var isAdmin=(qs.get('admin')==='1');
+  if(!isAdmin) track('pv');   // 访客打开页面记一次（管理端自己打开不计）
 
   function msg(el,text,kind){ if(!el) return; el.textContent=text||''; el.className='gate-msg'+(kind?' '+kind:''); }
   function switchView(which){
     var L=$('gateLogin'), A=$('gateAdmin'); if(!L||!A) return;
-    if(which==='admin'){ L.style.display='none'; A.style.display='block'; renderAdmin(); }
+    if(which==='admin'){ L.style.display='none'; A.style.display='block'; renderAdmin(); initVisitors(); }
     else { A.style.display='none'; L.style.display='block'; }
   }
   function unlock(phone){
@@ -2986,6 +3044,56 @@
     fallback();
   }
 
+  // ---- 访客记录查看（仅管理视图；只显示时间/事件/掩码手机/城市/设备） ----
+  var VT_NAME={pv:'打开', login:'登录', calc:'测算'};
+  function renderVisitors(data){
+    var ul=$('visList'); if(!ul) return;
+    ul.textContent='';
+    if(data){
+      var set=function(id,v){ var e=$(id); if(e) e.textContent=String(v==null?'-':v); };
+      set('visPv',data.pv); set('visUv',data.uv); set('visLogin',data.logins); set('visCalc',data.calcs);
+    }
+    var items=(data&&data.items)||[];
+    if(!items.length){
+      var li0=document.createElement('li'); li0.className='vis-empty';
+      li0.textContent=data?'暂无记录':'填入查看密钥后点「查看」';
+      ul.appendChild(li0); return;
+    }
+    items.forEach(function(it){
+      it=it||{};
+      var li=document.createElement('li'); li.className='vis-item';
+      var t=document.createElement('span'); t.className='vt'; t.textContent=String(it.ts||'').slice(5);
+      var e=document.createElement('span'); e.className='ve '+String(it.type||'pv'); e.textContent=VT_NAME[it.type]||'打开';
+      var p=document.createElement('span'); p.className='vp'; p.textContent=it.phone||'';
+      var c=document.createElement('span'); c.className='vc'; c.textContent=[it.city,it.dev].filter(Boolean).join(' · ');
+      li.appendChild(t); li.appendChild(e); li.appendChild(p); li.appendChild(c); ul.appendChild(li);
+    });
+  }
+  function loadVisitors(){
+    var ki=$('visKey'), key=ki?String(ki.value||'').trim():'';
+    if(!key){ msg($('visMsg'),'请输入查看密钥（ADMIN_KEY）。','err'); return; }
+    if(!TRACK_URL){ msg($('visMsg'),'未配置统计接口，暂无法查看。','err'); return; }
+    lsSet(VKEY,key);
+    msg($('visMsg'),'正在读取…','');
+    fetch(TRACK_URL+'?key='+encodeURIComponent(key))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d || !d.ok){
+          msg($('visMsg'), (d&&d.error==='unauthorized')?'密钥不正确。':((d&&d.error==='kv_not_bound')?'服务端未绑定 KV 存储。':'读取失败，请稍后重试。'),'err');
+          renderVisitors(null); return;
+        }
+        msg($('visMsg'),'已更新 · 最近 '+((d.items||[]).length)+' 条','ok');
+        renderVisitors(d);
+      })
+      .catch(function(){ msg($('visMsg'),'网络不通，稍后重试。','err'); renderVisitors(null); });
+  }
+  function initVisitors(){
+    var k=lsGet(VKEY,''), ki=$('visKey');
+    if(ki && k) ki.value=k;
+    renderVisitors(null);
+    if(k && TRACK_URL) loadVisitors();
+  }
+
   // ---- 1) 邀请链接：把名单写入本机 ----
   var invRaw=qs.get('inv');
   if(invRaw){
@@ -3055,6 +3163,10 @@
     }); }
     var out=$('acctOut');
     if(out && !out.__bound){ out.__bound=1; out.addEventListener('click',logout); }
+    var vl=$('visLoad');
+    if(vl && !vl.__bound){ vl.__bound=1; vl.addEventListener('click',loadVisitors); }
+    var vk=$('visKey');
+    if(vk && !vk.__bound){ vk.__bound=1; vk.addEventListener('keydown',function(e){ if(e.key==='Enter') loadVisitors(); }); }
     renderAdmin();
   }
 
@@ -3064,6 +3176,7 @@
     var err=checkLogin(phone,pwd);
     if(err){ msg($('gateMsg'),err,'err'); return; }
     msg($('gateMsg'),'登录成功，正在进入…','ok');
+    track('login',{phone:phone});   // 只上报掩码手机号，不含任何测算数据
     unlock(phone);
   }
 })();
