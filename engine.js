@@ -32,7 +32,8 @@
   // 分年龄段养育支出参考（child age = 当前年 − 出生年；monthly 单位：万/月）
   // 阶段覆盖：孕产（含备孕/出生当年）→ 幼儿 → 幼儿园 → 小学 → 初中 → 高中 → 大学
   const DEFAULT_CHILD_STAGES = [
-    { from: -1, to: 0,  annual: 4.8 }, // 孕产阶段（备孕 + 出生当年）
+    { from: -1, to: -1, annual: 2 },   // 备孕 / 怀孕当年
+    { from: 0,  to: 0,  annual: 8 },   // 出生当年（生产 + 月子）
     { from: 1,  to: 3,  annual: 3.6 }, // 幼儿阶段
     { from: 4,  to: 6,  annual: 3.0 }, // 幼儿园阶段
     { from: 7,  to: 12, annual: 2.4 }, // 小学阶段
