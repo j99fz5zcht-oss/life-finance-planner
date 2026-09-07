@@ -696,25 +696,11 @@
   .adm-qr canvas{display:block;margin:0 auto;width:170px;height:170px;border-radius:8px;background:#fff}
   .adm-qr-cap{margin:9px 0 10px;font-size:13px;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
   .adm-qr-cap span{display:block;margin-top:3px;font-weight:400;font-size:11px;color:var(--sub)}
-  /* ---- 访客记录（管理视图） ---- */
+  /* ---- 访客提醒（管理视图） ---- */
   .vis-sec{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
-  .vis-cfg{display:flex;gap:6px;margin-bottom:9px}
-  .vis-cfg input{flex:1;min-width:0;box-sizing:border-box;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:11.5px;color:var(--ink);background:var(--card)}
-  .vis-cfg input:focus{outline:0;border-color:var(--brand2);box-shadow:var(--ring)}
-  .vis-kpis{display:flex;gap:6px;margin-bottom:9px}
-  .vis-kpi{flex:1;text-align:center;padding:7px 3px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}
-  .vis-kpi b{display:block;font-size:16px;line-height:1.25;color:var(--brand);font-variant-numeric:tabular-nums}
-  .vis-kpi span{font-size:10.5px;color:var(--sub)}
-  .vis-list{max-height:214px;overflow:auto;margin:0;padding:0;list-style:none}
-  .vis-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;margin-bottom:5px;font-size:11.5px}
-  .vis-item .vt{flex:none;color:var(--sub);font-variant-numeric:tabular-nums}
-  .vis-item .ve{flex:none;padding:1px 6px;border-radius:5px;font-size:10.5px;font-weight:700}
-  .ve.pv{background:var(--soft);color:var(--sub)}
-  .ve.login{background:rgba(214,69,69,.13);color:var(--pos)}
-  .ve.calc{background:rgba(37,99,235,.13);color:var(--brand2)}
-  .vis-item .vp{flex:1;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-  .vis-item .vc{flex:none;color:var(--sub)}
-  .vis-empty{font-size:12px;color:var(--sub);padding:8px 0}
+  .vis-note{margin:0 0 9px;font-size:12px;line-height:1.6;color:var(--ink)}
+  .vis-tip{margin:9px 0 0;font-size:11px;line-height:1.7;color:var(--sub)}
+  .vis-tip b{color:var(--ink)}
   .gate-switch{margin-top:14px;text-align:center;font-size:11.5px;color:var(--sub)}
   .gate-switch a{color:var(--brand2);cursor:pointer;text-decoration:underline}
   @media print{ .gate,.acct-bar{display:none!important} }
@@ -739,7 +725,7 @@
       <label class="gl"><span>密码</span><input id="gatePwd" type="password" inputmode="numeric" maxlength="6" placeholder="手机号后六位" autocomplete="current-password"></label>
       <button class="gate-btn" id="gateLoginBtn">登 录</button>
       <p class="gate-msg" id="gateMsg" role="status" aria-live="polite"></p>
-      <p class="gate-tip">初始密码为手机号<b>后六位</b>。<br>本工具为邀请制，未受邀的手机号无法登录。<br>会记录「打开 / 登录 / 测算」行为（时间、掩码手机号、城市、设备），但<b>不上传任何测算数据</b>。</p>
+      <p class="gate-tip">初始密码为手机号<b>后六位</b>。<br>本工具为邀请制，未受邀的手机号无法登录。<br>登录和完成测算时，会给开通人推送一条微信提醒（内容只有<b>掩码手机号、时间、设备</b>），<b>不上传任何测算数据</b>。</p>
     </div>
 
     <!-- 管理视图（?admin=1 进入） -->
@@ -760,21 +746,13 @@
         <ul class="adm-list" id="admList"></ul>
       </div>
       <div class="vis-sec">
-        <div class="adm-label">访客记录</div>
-        <div class="vis-cfg">
-          <input id="visKey" type="password" placeholder="查看密钥（ADMIN_KEY）" autocomplete="off">
-          <button class="adm-mini" id="visLoad" type="button">查看</button>
-        </div>
-        <div class="vis-kpis">
-          <div class="vis-kpi"><b id="visPv">-</b><span>打开次数</span></div>
-          <div class="vis-kpi"><b id="visUv">-</b><span>独立访客</span></div>
-          <div class="vis-kpi"><b id="visLogin">-</b><span>登录次数</span></div>
-          <div class="vis-kpi"><b id="visCalc">-</b><span>测算次数</span></div>
-        </div>
-        <ul class="vis-list" id="visList"></ul>
+        <div class="adm-label">访客提醒</div>
+        <p class="vis-note" id="visState">已开启</p>
+        <button class="adm-mini" id="visTest" type="button">发一条测试推送</button>
         <p class="gate-msg" id="visMsg" role="status" aria-live="polite"></p>
+        <p class="vis-tip">推送内容只有<b>事件、掩码手机号、时间、设备</b>，<b>不含任何测算数据</b>。<br>历史消息在 Server酱 网站（sct.ftqq.com）的「消息记录」里翻。</p>
       </div>
-      <p class="gate-tip">移除仅清除本机名单；已发出的邀请链接无法远程作废（纯静态站，无服务端）。<br>访客记录只含时间、事件、掩码手机号、城市与设备，不含任何测算数据。</p>
+      <p class="gate-tip">移除仅清除本机名单；已发出的邀请链接无法远程作废（纯静态站，无服务端）。</p>
       <p class="gate-switch"><a id="gateSwitch">返回登录</a></p>
     </div>
   </div>
@@ -2908,24 +2886,51 @@
   function mask(p){ return String(p).slice(0,3)+'****'+String(p).slice(-4); }
   function $(id){ return document.getElementById(id); }
 
-  /* ---- 访客行为上报 ----
-     只发「事件」：时间、类型、掩码手机号、城市、设备。
+  /* ---- 访客提醒（微信推送 · Server酱）----
+     只在「登录 / 完成测算」时推送，普通打开不推，避免打扰。
+     推送内容只有：事件、掩码手机号、时间、设备。
      绝不发送任何测算数据（收入、资产、年龄、测算结果等一律留在本机）。
-     TRACK_URL 为统计接口地址；留空则完全不上报。 */
-  var TRACK_URL='https://lffp-visit-tracker.j99fz5zcht.workers.dev';
-  var VIS_KEY='lffp.vis.v1', VKEY='lffp.viskey.v1';
-  function getVid(){
-    var v=lsGet(VIS_KEY,'');
-    if(!v){ v='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); lsSet(VIS_KEY,v); }
-    return v;
+     用「图片打点」发送（GET），不受 CORS 限制；失败也完全不影响页面使用。 */
+  var SC_KEY='SCT414202TrVKzqnRBtLwUzEtUxG4l1qYr';
+  var SC_URL='https://sctapi.ftqq.com/'+SC_KEY+'.send';
+  var SC_GAP=60000;   // 同一访客同类事件 60 秒内只推一次（防刷新刷屏）
+
+  function scTime(){
+    var d=new Date(Date.now()+8*3600*1000), p=function(n){ return String(n).length<2?'0'+n:''+n; };
+    return p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate())+' '+p(d.getUTCHours())+':'+p(d.getUTCMinutes());
+  }
+  function scDevice(){
+    var u=navigator.userAgent||'';
+    if(/MicroMessenger/i.test(u)) return '微信内置';
+    if(/iPhone|iPad|iPod/i.test(u)) return 'iOS';
+    if(/Android/i.test(u)) return 'Android';
+    if(/Macintosh/i.test(u)) return 'Mac';
+    if(/Windows/i.test(u)) return 'Windows';
+    return '其他';
+  }
+  function scPhone(){   // 注意：不要叫 curPhone，下面已有同名变量
+    try{ var au=JSON.parse(lsGet(AUTH_KEY,'null')); if(au && PHONE_RE.test(String(au.phone))) return String(au.phone); }catch(e){}
+    return '';
+  }
+  function sendPush(type,phone,force){
+    if(!SC_KEY) return;
+    try{
+      var key='lffp.sc.'+type, last=0, now=Date.now();
+      try{ last=parseInt(lsGet(key,'0'),10)||0; }catch(e){}
+      if(!force && now-last<SC_GAP) return;
+      lsSet(key,String(now));
+      var title=(type==='calc')?'有人完成了一次测算':(type==='test'?'【测试】访客提醒已接通':'有人登录了工具');
+      var lines=['时间：'+scTime()];
+      if(phone) lines.push('账号：'+mask(phone));
+      lines.push('设备：'+scDevice());
+      var img=new Image();
+      img.src=SC_URL+'?title='+encodeURIComponent(title)+'&desp='+encodeURIComponent(lines.join('\n\n'));
+    }catch(e){}
   }
   function track(type,extra){
-    if(!TRACK_URL || !window.fetch) return;
-    try{
-      var body={type:type, vid:getVid()};
-      if(extra && extra.phone) body.phone=String(extra.phone);
-      fetch(TRACK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(function(){});
-    }catch(e){}
+    if(type==='pv') return;                 // 普通打开不推送
+    if(type==='test'){ sendPush('test',(extra&&extra.phone)||scPhone(),true); return; }
+    sendPush(type,(extra&&extra.phone)||scPhone(),false);
   }
   window.LFFPTrack=track;
 
@@ -2938,7 +2943,6 @@
 
   var qs=new URLSearchParams(location.search);
   var isAdmin=(qs.get('admin')==='1');
-  if(!isAdmin) track('pv');   // 访客打开页面记一次（管理端自己打开不计）
 
   function msg(el,text,kind){ if(!el) return; el.textContent=text||''; el.className='gate-msg'+(kind?' '+kind:''); }
   function switchView(which){
@@ -3044,54 +3048,16 @@
     fallback();
   }
 
-  // ---- 访客记录查看（仅管理视图；只显示时间/事件/掩码手机/城市/设备） ----
-  var VT_NAME={pv:'打开', login:'登录', calc:'测算'};
-  function renderVisitors(data){
-    var ul=$('visList'); if(!ul) return;
-    ul.textContent='';
-    if(data){
-      var set=function(id,v){ var e=$(id); if(e) e.textContent=String(v==null?'-':v); };
-      set('visPv',data.pv); set('visUv',data.uv); set('visLogin',data.logins); set('visCalc',data.calcs);
-    }
-    var items=(data&&data.items)||[];
-    if(!items.length){
-      var li0=document.createElement('li'); li0.className='vis-empty';
-      li0.textContent=data?'暂无记录':'填入查看密钥后点「查看」';
-      ul.appendChild(li0); return;
-    }
-    items.forEach(function(it){
-      it=it||{};
-      var li=document.createElement('li'); li.className='vis-item';
-      var t=document.createElement('span'); t.className='vt'; t.textContent=String(it.ts||'').slice(5);
-      var e=document.createElement('span'); e.className='ve '+String(it.type||'pv'); e.textContent=VT_NAME[it.type]||'打开';
-      var p=document.createElement('span'); p.className='vp'; p.textContent=it.phone||'';
-      var c=document.createElement('span'); c.className='vc'; c.textContent=[it.city,it.dev].filter(Boolean).join(' · ');
-      li.appendChild(t); li.appendChild(e); li.appendChild(p); li.appendChild(c); ul.appendChild(li);
-    });
-  }
-  function loadVisitors(){
-    var ki=$('visKey'), key=ki?String(ki.value||'').trim():'';
-    if(!key){ msg($('visMsg'),'请输入查看密钥（ADMIN_KEY）。','err'); return; }
-    if(!TRACK_URL){ msg($('visMsg'),'未配置统计接口，暂无法查看。','err'); return; }
-    lsSet(VKEY,key);
-    msg($('visMsg'),'正在读取…','');
-    fetch(TRACK_URL+'?key='+encodeURIComponent(key))
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(!d || !d.ok){
-          msg($('visMsg'), (d&&d.error==='unauthorized')?'密钥不正确。':((d&&d.error==='kv_not_bound')?'服务端未绑定 KV 存储。':'读取失败，请稍后重试。'),'err');
-          renderVisitors(null); return;
-        }
-        msg($('visMsg'),'已更新 · 最近 '+((d.items||[]).length)+' 条','ok');
-        renderVisitors(d);
-      })
-      .catch(function(){ msg($('visMsg'),'网络不通，稍后重试。','err'); renderVisitors(null); });
-  }
+  // ---- 访客提醒（管理视图：状态 + 自检） ----
   function initVisitors(){
-    var k=lsGet(VKEY,''), ki=$('visKey');
-    if(ki && k) ki.value=k;
-    renderVisitors(null);
-    if(k && TRACK_URL) loadVisitors();
+    var st=$('visState');
+    if(st) st.textContent = SC_KEY ? '已开启 · 有人登录或完成测算时，微信会收到推送' : '未开启（未配置推送密钥）';
+    var bt=$('visTest');
+    if(bt && !bt.__bound){ bt.__bound=1; bt.addEventListener('click',function(){
+      if(!SC_KEY){ msg($('visMsg'),'未配置推送密钥。','err'); return; }
+      sendPush('test','',true);
+      msg($('visMsg'),'已发送，看微信有没有收到（几秒内）。','ok');
+    }); }
   }
 
   // ---- 1) 邀请链接：把名单写入本机 ----
@@ -3163,10 +3129,6 @@
     }); }
     var out=$('acctOut');
     if(out && !out.__bound){ out.__bound=1; out.addEventListener('click',logout); }
-    var vl=$('visLoad');
-    if(vl && !vl.__bound){ vl.__bound=1; vl.addEventListener('click',loadVisitors); }
-    var vk=$('visKey');
-    if(vk && !vk.__bound){ vk.__bound=1; vk.addEventListener('keydown',function(e){ if(e.key==='Enter') loadVisitors(); }); }
     renderAdmin();
   }
 
