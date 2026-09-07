@@ -934,6 +934,18 @@
           <div class="citem"><label>每月房租（万/月，保留 2 位小数）</label><input type="number" id="rentMonthly" value="0.50" min="0" step="0.01"></div>
         </div>
         <span class="inline-note">后续每年房租按 <b>2%</b> 递增（固定假设）。下方「购房预算」请一并填写——系统用它对比「一直租房」与「计划购房」的财务缺口；这笔预算只用于对比，不影响你实际按房租支出的测算。</span>
+        <div class="crow" style="margin-top:10px">
+          <div class="citem" style="flex-basis:100%">
+            <label class="chk"><input type="checkbox" id="rentChangeOn"> 某个年龄起重新设置房租（如退休后回二三线城市、旅居换城市，房租会明显变化）</label>
+          </div>
+        </div>
+        <div class="cond" id="cond-rentchange">
+          <div class="crow">
+            <div class="citem"><label>从多少岁起</label><input type="number" id="rentChangeAge" value="65" min="1" max="120" step="1"></div>
+            <div class="citem"><label>调整后每月房租（万/月）</label><input type="number" id="rentChangeMonthly" value="0.25" min="0" step="0.01"></div>
+          </div>
+          <span class="inline-note">切换后按新租金继续每年 <b>2%</b> 递增。例如 65 岁回老家、房租从 0.50 降到 0.25 万/月，后期现金流压力会明显下降。</span>
+        </div>
       </div>
       <div class="cond" id="cond-buy">
         <div class="ch-head">购房预算（两种选择都填，用于对比两条路）：无论你选「一直租房」还是「计划购房」，都填这份购房方案。系统对比「一直租房 vs 计划购房」的财务缺口——这里填的预算只参与对比，不改变你实际选择的居住方式测算。</div>
@@ -1336,6 +1348,12 @@
   bindCond('incomeType','cond-income',['stable','freelance']);
   bindCond('housing','cond-ownLoan',['ownLoan']);
   bindCond('housing','cond-rent',['rent']);
+  // 「某年龄起重设房租」：勾选后才展开年龄 + 新月租
+  (function(){
+    const on=$('#rentChangeOn'), box=$('#cond-rentchange');
+    function sync(){ if(box) box.classList.toggle('show', !!(on && on.checked)); }
+    if(on){ on.addEventListener('change', sync); sync(); }
+  })();
   bindCond('housing','cond-buy',['rent','buy']);
   bindCond('housing','cond-buyPreRent',['buy']);
   bindCond('housing','cond-buyPrepay',['buy']);
@@ -1878,6 +1896,8 @@
       ownLoanGjjBal: num('ownLoanGjjBal'),
       ownLoanGjjRate: num('ownLoanGjjRate')/100,
       rentMonthly: num('rentMonthly'),
+      rentChange: (($('#rentChangeOn')||{}).checked && $('#rentChangeAge') && $('#rentChangeMonthly'))
+        ? { age: parseInt($('#rentChangeAge').value,10)||0, monthly: num('rentChangeMonthly') } : null,
       preBuyRentMonthly: num('preBuyRent'),
       buyTotal: num('buyTotal'), downPayment: num('downPayment'), loanGjj: num('loanGjj'), loanComm: num('loanComm'),
       loanYears: parseInt($('#loanYears').value)||30,
@@ -2573,7 +2593,7 @@
     };
     let housingStr = hn;
     if (p.housing==='ownLoan') housingStr += ' 商贷余额'+p.ownLoanCommBal+'万@'+(p.ownLoanCommRate*100)+'%, 公积金余额'+p.ownLoanGjjBal+'万@'+(p.ownLoanGjjRate*100)+'%, 商贷月供'+p.ownCommMonthly.toFixed(2)+'+公积金月供'+p.ownGjjMonthly.toFixed(2)+'='+p.ownLoanMonthly.toFixed(2)+'万/月, 至 '+p.loanEndYear+' 年' + prepayText(x=>x.which==='comm'||x.which==='gjj');
-    else if (p.housing==='rent') housingStr += ' 房租'+p.rentMonthly+'万/月,年增2%';
+    else if (p.housing==='rent'){ housingStr += ' 房租'+p.rentMonthly+'万/月,年增2%'; if(p.rentChange) housingStr += '；'+p.rentChange.age+'岁起改为'+p.rentChange.monthly+'万/月'; }
     else if (p.housing==='buy') {
       housingStr += ' 总额'+p.buyTotal+'万/首付'+p.downPayment+'万/公积金贷'+p.loanGjj+'万/商贷'+p.loanComm+'万/'+p.loanYears+'年@公积金'+(p.gjjRate*100)+'%+商贷'+(p.commRate*100)+'%, 原始月供'+p.monthlyPayment.toFixed(2)+'万/月, '+p.buyYear+' 年购房, 购房前租金'+p.preBuyRentMonthly+'万/月';
       if (p.prepays && p.prepays.length) housingStr += '；提前还贷：'+p.prepays.map(x=>(x.which==='gjj'?'公积金':x.which==='comm'?'商贷':'房贷')+' '+x.amount+'万@'+x.year+'年'+(x.mode==='reduceTerm'?'（减少还款年限，月供不变）':'（保持还款年限，月供减少）')).join('、');
@@ -2701,6 +2721,9 @@
         const el=document.getElementById(id); if(!el) return;
         if(el.type==='checkbox') el.checked=!!s.v[id]; else el.value=s.v[id];
       });
+      // 恢复勾选态后同步依赖它的条件区块（如「某年龄起重设房租」的展开区）
+      const rco=document.getElementById('rentChangeOn');
+      if(rco) rco.dispatchEvent(new Event('change',{bubbles:true}));
       // 3) 动态列表：先对齐行数，再按行填值
       DRAFT_LISTS.forEach(L=>{
         const box=document.getElementById(L.box); const want=(s.rows||{})[L.box];
