@@ -1413,7 +1413,7 @@
       $$('#parentList .parentrow').forEach((r,i)=>{
         let lab=(r.querySelector('.plabel')||{}).value || '长辈';
         if(seen[lab]){ seen[lab]++; lab=lab+seen[lab]; } else seen[lab]=1;
-        members.push({key:'parent-'+i, label:lab});
+        members.push({key:'parent-'+(r.dataset.pid||i), label:lab});
       });
     }
     return members;
@@ -1573,8 +1573,10 @@
     const title = (curAge>0) ? `（该长辈当前 ${curAge} 岁，从当前年龄起算至 ${stopAge-1} 岁）` : '';
     box.innerHTML = `<div class="stage-head" style="margin-top:0">分年龄段赡养支出${title}（参考值仅展示，请在「您的填写」列按实际填）</div><table class="stage-tbl"><thead><tr><th>阶段</th><th>父母年龄区间</th><th>参考值(万/年)</th><th>您的填写(万/年)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
   }
+  let parentSeq = 0;
   function parentRow(label, birthYear){
     const row=document.createElement('div'); row.className='parentrow childrow';
+    row.dataset.pid = 'p' + (++parentSeq);   // 稳定 id：删除中间某位时，保险区的险种勾选不会串位
     row.innerHTML=`<span class="seq">长辈 1</span>
       <span class="at">称呼</span>
       <select class="plabel">
@@ -1589,6 +1591,8 @@
     if(label) row.querySelector('.plabel').value=label;
     fillParentYearSelect(row.querySelector('.pbyear'), birthYear);
     renderParentStages(row);
+    // 改称呼要同步：赡养提示文案 + 风险保障评估的成员名单（否则保险区仍显示旧称呼）
+    row.querySelector('.plabel').addEventListener('change',()=>{ renderParentHint(); renderRiskList(); });
     row.querySelector('.pbyear').addEventListener('change',()=>{ renderParentStages(row); renderParentHint(); });
     row.querySelector('.pstop').addEventListener('input',()=>{ renderParentStages(row); renderParentHint(); });
     row.querySelector('.rm').addEventListener('click',()=>{ row.classList.add('removing'); setTimeout(()=>{ row.remove(); renumberParents(); renderParentHint(); renderRiskList(); }, 220); });
