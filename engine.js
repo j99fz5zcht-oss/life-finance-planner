@@ -205,6 +205,10 @@
     const ownLoanMonthly = (typeof a.ownLoanMonthly === 'number') ? a.ownLoanMonthly : 0; // 旧字段兜底（合并月供）
     const ownLoanRate = (typeof a.ownLoanRate === 'number') ? a.ownLoanRate : DEFAULT_COMM_RATE; // 旧字段兜底利率
     const rentMonthly = (typeof a.rentMonthly === 'number') ? a.rentMonthly : 0;           // 万/月
+    // 一直租房：某年龄起重设房租（退休回老家 / 旅居等），切换后仍按 rentGrowth 逐年递增
+    const rentChange = (a.rentChange && typeof a.rentChange.age === 'number' && a.rentChange.monthly != null)
+      ? { age: a.rentChange.age, monthly: (typeof a.rentChange.monthly === 'number') ? a.rentChange.monthly : 0 }
+      : null;
     const preBuyRentMonthly = (typeof a.preBuyRentMonthly === 'number') ? a.preBuyRentMonthly : 0; // 万/月（计划购房前）
     const buyTotal = (typeof a.buyTotal === 'number') ? a.buyTotal : 0;       // 计划购房总额
     const downPayment = (typeof a.downPayment === 'number') ? a.downPayment : 0; // 首付
@@ -303,7 +307,7 @@
       startYear, currentAge, retireAge, targetAge, returnRate, startBalance,
       incomeType, wageBands,
       items,
-      housing, ownLoanMonthly: ownLoanMonthlyTotal, ownLoanCommBal, ownLoanGjjBal, ownLoanCommRate, ownLoanGjjRate, ownCommMonthly, ownGjjMonthly, ownCommMonthlyByYear, ownGjjMonthlyByYear, ownMonthlyByYear, rentMonthly, rentGrowth: RENT_GROWTH, preBuyRentMonthly,
+      housing, ownLoanMonthly: ownLoanMonthlyTotal, ownLoanCommBal, ownLoanGjjBal, ownLoanCommRate, ownLoanGjjRate, ownCommMonthly, ownGjjMonthly, ownCommMonthlyByYear, ownGjjMonthlyByYear, ownMonthlyByYear, rentMonthly, rentChange, rentGrowth: RENT_GROWTH, preBuyRentMonthly,
       buyTotal, downPayment, loanGjj, loanComm, loanYears, gjjRate, commRate, buyYear, loanEndYear, monthlyPayment,
       gjjMonthly, commMonthly, prepays: prepaysRaw,
       dailyAnnual, livingGrowth,
@@ -402,7 +406,15 @@
       const ys = (year - p.startYear) + 1; // 1=模拟起点年；含提前还贷后月供时间表
       housing = (p.ownMonthlyByYear[ys] || 0) * 12;
     } else if (p.housing === 'rent') {
-      housing = p.rentMonthly * 12 * Math.pow(1 + p.rentGrowth, year - p.startYear); // 租房，年增 2%
+      const _age = p.currentAge + (year - p.startYear);
+      const rc = p.rentChange;
+      if (rc && _age >= rc.age) {
+        // 到切换年龄后（退休回老家 / 旅居），以新月租为基准重新按 2% 递增
+        const chYear = p.startYear + (rc.age - p.currentAge);
+        housing = rc.monthly * 12 * Math.pow(1 + p.rentGrowth, year - chYear);
+      } else {
+        housing = p.rentMonthly * 12 * Math.pow(1 + p.rentGrowth, year - p.startYear); // 租房，年增 2%
+      }
     } else { // buy 计划购房
       const yrSince = year - p.buyYear;
       if (yrSince < 0) housing = p.preBuyRentMonthly * 12 * Math.pow(1 + p.rentGrowth, year - p.startYear); // 购房前租金
