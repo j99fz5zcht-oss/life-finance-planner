@@ -29,8 +29,9 @@
   const RENT_GROWTH       = 0.02;    // 一直租房 / 购房前租房：每年房租固定涨幅 2%
   const LIVING_GROWTH     = 0.02;    // 基本生活开支：每年固定涨幅 2%
 
-  // 分年龄段养育支出参考（child age = 当前年 − 出生年；monthly 单位：万/月）
-  // 阶段覆盖：孕产（含备孕/出生当年）→ 幼儿 → 幼儿园 → 小学 → 初中 → 高中 → 大学
+  // 分年龄段养育支出参考（child age = 当前年 − 出生年；annual 单位：万/年）
+  // 阶段覆盖：孕产（含备孕/出生当年）→ 幼儿 → 幼儿园 → 小学 → 初中 → 高中 → 大学 → 研究生
+  // ⚠️ 必须与 planner.html 的 CHILD_STAGE_DEFS 保持一致（9 段，末段 23–25 岁研究生）。
   const DEFAULT_CHILD_STAGES = [
     { from: -1, to: -1, annual: 2 },   // 备孕 / 怀孕当年
     { from: 0,  to: 0,  annual: 8 },   // 出生当年（生产 + 月子）
@@ -40,6 +41,7 @@
     { from: 13, to: 15, annual: 3.0 }, // 初中阶段
     { from: 16, to: 18, annual: 3.6 }, // 高中阶段
     { from: 19, to: 22, annual: 4.8 }, // 大学阶段
+    { from: 23, to: 25, annual: 4.8 }, // 研究生阶段（与前端「留空=到研究生阶段 25 岁」一致）
   ];
 
   // 父母赡养支出参考（parent age = 当前年 − 父母出生年；annual 单位：万/年，每位父母）
