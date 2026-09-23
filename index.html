@@ -3088,8 +3088,17 @@
   // ---- 2.5) 现场开放模式：?open=1 直接放行，不需要手机号 ----
   // 用于线下分享现场：扫码即可体验，不走邀请名单。
   // 注意：不写 AUTH_KEY（不污染登录态），只记一条「现场版」访客提醒。
+  // 有效期：到 2026-09-30 24:00（北京时间）= 2026-10-01 00:00 +08:00 止，
+  //         之后扫码不再放行（也不会再推送访客提醒），避免入口长期敞开。
+  var OPEN_UNTIL=Date.parse('2026-10-01T00:00:00+08:00'); // = 1790784000000
   var isOpen=(qs.get('open')==='1');
   if(isOpen && !isAdmin){
+    if(!(Date.now()<OPEN_UNTIL)){
+      // 已过期：关闭现场入口，停在门禁并说明原因
+      lock();
+      msg($('gateMsg'),'现场体验入口已于 9 月 30 日 24:00 关闭。','');
+      bindUI(); return;
+    }
     document.body.classList.add('gate-passed');
     var go=$('gate'); if(go) go.style.display='none';
     var po=$('acctPhone'); if(po) po.textContent='现场体验';
