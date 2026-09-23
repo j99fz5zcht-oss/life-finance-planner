@@ -2919,7 +2919,10 @@
       try{ last=parseInt(lsGet(key,'0'),10)||0; }catch(e){}
       if(!force && now-last<SC_GAP) return;
       lsSet(key,String(now));
-      var title=(type==='calc')?'有人完成了一次测算':(type==='test'?'【测试】访客提醒已接通':'有人登录了工具');
+      var title=(type==='calc')?'有人完成了一次测算'
+        :(type==='test')?'【测试】访客提醒已接通'
+        :(type==='open')?'有人打开了现场版（未登录）'
+        :'有人登录了工具';
       var lines=['时间：'+scTime()];
       if(phone) lines.push('账号：'+mask(phone));
       lines.push('设备：'+scDevice());
@@ -3081,6 +3084,18 @@
     bindUI(); return;
   }
   if(curPhone) lsDel(AUTH_KEY);
+
+  // ---- 2.5) 现场开放模式：?open=1 直接放行，不需要手机号 ----
+  // 用于线下分享现场：扫码即可体验，不走邀请名单。
+  // 注意：不写 AUTH_KEY（不污染登录态），只记一条「现场版」访客提醒。
+  var isOpen=(qs.get('open')==='1');
+  if(isOpen && !isAdmin){
+    document.body.classList.add('gate-passed');
+    var go=$('gate'); if(go) go.style.display='none';
+    var po=$('acctPhone'); if(po) po.textContent='现场体验';
+    track('open');
+    bindUI(); return;
+  }
 
   // ---- 3) 否则停在门禁 ----
   lock();
