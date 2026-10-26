@@ -1504,16 +1504,18 @@
   const DEFAULT_KID_STAGES = CHILD_STAGE_DEFS.map(d=>({from:d.from, to:d.to, annual:d.def}));
 
   // ---- 工资按年龄段分段（职业阶段，连续覆盖 22→退休，无空档）----
-  // 分段：按每 5 岁一段，从 22 岁到退休前（55 岁起为临近退休段），连续无空档；相邻段边界左闭右开（如 25 岁计入「25–30」段）。
+  // 分段：按每 5 岁一段，从 22 岁到退休前（56 岁起为临近退休段），连续无空档；相邻段边界左闭右开（如 36–41 段实际覆盖 36~40 岁，界面按闭区间显示为「36–40 岁」）。
+  // 2026-10-26 调整：36 岁起改为 36–40 / 41–45 / 46–50 / 51–55 / 56–60（原为 35–40 / 40–45 /…）；30–35 段顺势延到 30–35（to=36）以免与 36 起的新段之间留空档。
   const SALARY_BANDS = [
     {from:22, to:25,  label:'职场起步期', def:12},
     {from:25, to:30,  label:'职场起步期', def:15},
-    {from:30, to:35,  label:'事业成长期', def:18},
-    {from:35, to:40,  label:'事业成长期', def:25},
-    {from:40, to:45,  label:'收入高峰期', def:30},
-    {from:45, to:50,  label:'收入高峰期', def:35},
-    {from:50, to:55,  label:'职业后期',  def:33},
-    {from:55, to:120, label:'临近退休',  def:28},
+    {from:30, to:36,  label:'事业成长期', def:18},
+    {from:36, to:41,  label:'事业成长期', def:25},
+    {from:41, to:46,  label:'收入高峰期', def:30},
+    {from:46, to:51,  label:'收入高峰期', def:35},
+    {from:51, to:56,  label:'职业后期',  def:33},
+    {from:56, to:61,  label:'临近退休',  def:28},
+    {from:61, to:120, label:'延迟退休',  def:25},
   ];
   // 渲染税后工资按年龄段的填写表：仅展示与 [当前年龄, 退休年龄] 相交的段
   function renderWageBands(){
@@ -1527,7 +1529,7 @@
       .filter(Boolean);
     if(!shown.length){ box.innerHTML='<div class="stage-head">当前年龄已到 / 超过退休年龄，无需填写在职工资。</div>'; return; }
     const rowsHtml = shown.map((b,i)=>{
-      const rangeLab = (b.to>99) ? (b.from+' 岁–退休前') : (b.from+'–'+b.to+' 岁');
+      const rangeLab = (b.to>99) ? (b.from+' 岁–退休前') : ((b.to-b.from)===1 ? (b.from+' 岁（仅本年）') : (b.from+'–'+(b.to-1)+' 岁'));
       const lab = rangeLab+' · '+b.label;
       const note = (i===0 && b.from===curAge) ? ` <span class="age">（自当前 ${curAge} 岁起算）</span>` : '';
       return `<tr><td>${lab}${note}</td><td><input type="number" id="wb_${i}" class="wb" data-from="${b.from}" data-to="${b.to}" min="0" step="0.5" value="${b.def}"> 万/年</td></tr>`;
@@ -2631,7 +2633,7 @@
       ['出生日期',ans.dob+'（'+p.currentAge+' 岁）'],['起始年份',p.startYear],['当前年龄',p.currentAge+' 岁'],['起点本金',p.startBalance+' 万'],['年化收益率',Math.round(p.returnRate*1000)/10+'%'],['目标年龄',p.targetAge+' 岁'],
       ['收入类型',{stable:'稳定工作',freelance:'自由职业',uncertain:'暂时失业/不确定(按无工资)',none:'无劳动收入'}[p.incomeType]],
       ['税后工资(按年龄段 万/年)', (p.incomeType==='stable'||p.incomeType==='freelance')
-        ? (p.wageBands.length ? p.wageBands.map(b=>{const to=b.to>99?'退休前':b.to+'岁'; return b.from+'–'+to+'岁:'+b.annual;}).join('；') : '0')
+        ? (p.wageBands.length ? p.wageBands.map(b=>{const to=b.to>99?'退休前':((b.to-1)+'岁'); return b.from+'–'+to+'岁:'+b.annual;}).join('；') : '0')
         : '0'],
       ['退休/停年收入年龄',p.retireAge+' 岁'],
       ['投资和被动收入', itemStr],
