@@ -908,12 +908,23 @@
       </div>
 
     <div class="q">
-      <span class="label">6. 每年基本生活开支（总数） <small>仅本人日常基本生活，单位 万/年；后续每年按 2% 递增</small></span>
+      <span class="label">6. 每年基本生活开支（总数） <small>仅本人日常基本生活，单位 万/年；后续每年按你选定的比例递增</small></span>
       <div class="opts">
         <input type="number" id="dailyTotal" value="11" min="0" step="0.5" style="padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;width:180px">
         <span style="align-self:center;color:var(--sub);font-size:13px">万元 / 年（当前水平）</span>
       </div>
-      <span class="inline-note"><b>这里只填你本人的日常基本生活开支</b>，<b>不包含</b>：子女养育（第 8 部分「生育规划」单列）、住房 / 房贷 / 房租（第 7 部分「住房规划」单列）、父母赡养（第 9 部分「父母赡养」单列），也不含投资投入。计算规则：以填写的「当前年水平」为基准，之后每一年按 <b>2%</b> 自动递增（固定假设）。通常含：饮食餐饮、交通出行、医疗健康、服饰日用、休闲娱乐、人情交际、其他日常开销等。</span>
+      <div class="opts" style="margin-top:10px;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="color:var(--sub);font-size:13px">每年递增</span>
+        <select id="livingGrowth" style="padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+          <option value="0.01">1%</option>
+          <option value="0.015">1.5%</option>
+          <option value="0.02" selected>2%（默认）</option>
+          <option value="0.025">2.5%</option>
+          <option value="0.03">3%</option>
+        </select>
+        <span style="color:var(--sub);font-size:13px">参考：国家统计局数据，2026 前三季度 CPI 同比 +0.9%，2020–2025 年均约 1%</span>
+      </div>
+      <span class="inline-note"><b>这里只填你本人的日常基本生活开支</b>，<b>不包含</b>：子女养育（第 8 部分「生育规划」单列）、住房 / 房贷 / 房租（第 7 部分「住房规划」单列）、父母赡养（第 9 部分「父母赡养」单列），也不含投资投入。通常含：饮食餐饮、交通出行、服饰日用、家政服务、休闲娱乐、人情交际等；<b>不含医疗健康支出</b>（本工具未单列该项，若要计入请自行上调这里的金额）。计算规则：以填写的「当前年水平」为基准，之后每一年按你在上方选择的比例自动递增——可在 1% / 1.5% / 2% / 2.5% / 3% 之间切换，比较结果相差几年。</span>
     </div>
 
     <div class="q">
@@ -1378,6 +1389,9 @@
     $('#retCustom').style.display = isCustom ? 'block' : 'none';
     if(!isCustom) $('#retCustom').value='';
   });
+
+  // 生活开支年增速：切换档位后立刻重算
+  (function(){ const lg=$('#livingGrowth'); if(!lg) return; lg.addEventListener('change', function(){ if(typeof recalc==='function') recalc(); }); })();
 
   // 收入标签随类型变化
   document.querySelectorAll('input[name="incomeType"]').forEach(r=>r.addEventListener('change',()=>{
@@ -1918,6 +1932,7 @@
       buyYear: parseInt($('#buyYear').value)||y0,
       loanEndYear: parseInt($('#loanEndYear').value)||(y0+30),
       dailyAnnual: num('dailyTotal'),
+      livingGrowth: (function(){ const s=$('#livingGrowth'); return s ? (parseFloat(s.value)||0.02) : 0.02; })(),
       lumps,
       prepays,
       parents, parentsPlan,
@@ -2621,7 +2636,7 @@
       ['退休/停年收入年龄',p.retireAge+' 岁'],
       ['投资和被动收入', itemStr],
       ['住房',housingStr],
-      ['基本生活(总数,年增2%)',p.dailyAnnual+' 万/年(当前水平)'],
+      ['基本生活(总数,年增'+Math.round((ans.livingGrowth!=null?ans.livingGrowth:0.02)*1000)/10+'%)',p.dailyAnnual+' 万/年(当前水平)'],
       ['生育规划', childStr],
       ['父母赡养', (p.parents && p.parents.length)
         ? p.parents.map(pt=> pt.label+' '+pt.birthYear+' 年生（现 '+(p.startYear-pt.birthYear)+' 岁）至 '+pt.stopAge+' 岁，阶段费(万/年)：'+pt.stages.map(s=>s.annual).join('/'))
