@@ -1527,13 +1527,13 @@
     {from:46,to:51},{from:51,to:56},{from:56,to:61},{from:61,to:66},{from:66,to:71},
     {from:71,to:76},{from:76,to:81},{from:81,to:86},{from:86,to:91},{from:91,to:121}
   ];
-  // 起始档 = 包含「当前年龄 + 1」的那一档（即下一年所在的档），之后按网格逐档排到退休年龄。
-  // 这样 22 岁 → 22–25 起；35 岁 → 36–40 起（不会切出只剩一年的零头段）。
+  // 起始档 = 包含「当前年龄」的那一档，首段裁剪到从当前年龄起算，之后按网格逐档排到退休年龄。
+  // 22 岁 → 22–25 / 26–30…；26 岁 → 26–30 / 31–35…；30 岁 → 30 / 31–35 / 36–40…（落在档尾时该年单独一行）。
   function buildSalaryBands(curAge, ret){
-    const start = curAge + 1;
-    return BAND_GRID.filter(b => b.to > start && b.from <= ret)
-      .map(b => { const last=Math.min(b.to-1, ret); const mid=(b.from+last)/2;
-        return { from:b.from, to:b.to, showTo:last, label:bandLabel(mid), def:bandDef(mid) }; });
+    return BAND_GRID.filter(b => b.to > curAge && b.from <= ret)
+      .map(b => { const f=Math.max(b.from, curAge); const last=Math.min(b.to-1, ret); const mid=(f+last)/2;
+        return { from:f, to:b.to, showTo:last, label:bandLabel(mid), def:bandDef(mid) }; })
+      .filter(b => b.from <= b.showTo);
   }
   // 渲染税后工资按年龄段的填写表：仅展示与 [当前年龄, 退休年龄] 相交的段
   function renderWageBands(){
@@ -1545,7 +1545,7 @@
     const shown = buildSalaryBands(curAge, ret);
     if(!shown.length){ box.innerHTML='<div class="stage-head">当前年龄已到 / 超过退休年龄，无需填写在职工资。</div>'; return; }
     const rowsHtml = shown.map((b,i)=>{
-      const rangeLab = (b.showTo!=null && b.showTo>b.from) ? (b.from+'–'+b.showTo+' 岁') : (b.from+' 岁（仅本年）');
+      const rangeLab = (b.showTo!=null && b.showTo>b.from) ? (b.from+'–'+b.showTo+' 岁') : (b.from+' 岁');
       const lab = rangeLab+' · '+b.label;
       const note = (i===0 && b.from===curAge) ? ` <span class="age">（自当前 ${curAge} 岁起算）</span>` : '';
       return `<tr><td>${lab}${note}</td><td><input type="number" id="wb_${i}" class="wb" data-from="${b.from}" data-to="${b.to}" min="0" step="0.5" value="${b.def}"> 万/年</td></tr>`;
