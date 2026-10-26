@@ -1504,19 +1504,35 @@
   const DEFAULT_KID_STAGES = CHILD_STAGE_DEFS.map(d=>({from:d.from, to:d.to, annual:d.def}));
 
   // ---- 工资按年龄段分段（职业阶段，连续覆盖 22→退休，无空档）----
-  // 分段：按每 5 岁一段，从 22 岁到退休前（56 岁起为临近退休段），连续无空档；相邻段边界左闭右开（如 36–41 段实际覆盖 36~40 岁，界面按闭区间显示为「36–40 岁」）。
-  // 2026-10-26 调整：36 岁起改为 36–40 / 41–45 / 46–50 / 51–55 / 56–60（原为 35–40 / 40–45 /…）；30–35 段顺势延到 30–35（to=36）以免与 36 起的新段之间留空档。
-  const SALARY_BANDS = [
-    {from:22, to:25,  label:'职场起步期', def:12},
-    {from:25, to:30,  label:'职场起步期', def:15},
-    {from:30, to:36,  label:'事业成长期', def:18},
-    {from:36, to:41,  label:'事业成长期', def:25},
-    {from:41, to:46,  label:'收入高峰期', def:30},
-    {from:46, to:51,  label:'收入高峰期', def:35},
-    {from:51, to:56,  label:'职业后期',  def:33},
-    {from:56, to:61,  label:'临近退休',  def:28},
-    {from:61, to:120, label:'延迟退休',  def:25},
-  ];
+  // 2026-10-26 改为「动态分段」：段起点 = 出生日期算出的当前年龄，之后每 5 年一段（26–30 / 31–35 / 36–40 …），
+  // 最后一段截断到退休年龄（如 56–58）。内部仍左闭右开（from 含、to 不含），界面按闭区间显示 from–(to-1)。
+  function bandLabel(mid){
+    if(mid<28) return '职场起步期';
+    if(mid<36) return '事业成长期';
+    if(mid<46) return '收入高峰期';
+    if(mid<56) return '职业后期';
+    return '临近退休';
+  }
+  function bandDef(mid){
+    if(mid<28) return 12;
+    if(mid<36) return 18;
+    if(mid<46) return 30;
+    if(mid<56) return 33;
+    return 28;
+  }
+  function buildSalaryBands(curAge, ret){
+    const out=[]; let f=curAge;
+    while(f<=ret){
+      let t=Math.min(f+4, ret);
+      // 尾巴不足 5 年时并入本段，避免出现「只剩一年」的零头段
+      const remain = ret - t;
+      if(remain>0 && remain<5) t=ret;
+      const mid=(f+t)/2;
+      out.push({ from:f, to:t+1, label:bandLabel(mid), def:bandDef(mid) });
+      f=t+1;
+    }
+    return out;
+  }
   // 渲染税后工资按年龄段的填写表：仅展示与 [当前年龄, 退休年龄] 相交的段
   function renderWageBands(){
     const box = $('#wageBands'); if(!box) return;
@@ -1524,9 +1540,7 @@
     const ret = parseInt($('#retireAge').value)||60;
     // 仅保留与 (当前年龄, 退休年龄] 相交的段；并把首个相交段裁剪到「从当前年龄起算」，
     // 这样收入规划的真实起始年龄 = 当前年龄（而非固定的职业段起点）。
-    const shown = SALARY_BANDS.filter(b=> b.to > curAge && b.from <= ret)
-      .map(b=>{ const f=Math.max(b.from, curAge); return (f < b.to) ? Object.assign({}, b, {from:f}) : null; })
-      .filter(Boolean);
+    const shown = buildSalaryBands(curAge, ret);
     if(!shown.length){ box.innerHTML='<div class="stage-head">当前年龄已到 / 超过退休年龄，无需填写在职工资。</div>'; return; }
     const rowsHtml = shown.map((b,i)=>{
       const rangeLab = (b.to>99) ? (b.from+' 岁–退休前') : ((b.to-b.from)===1 ? (b.from+' 岁（仅本年）') : (b.from+'–'+(b.to-1)+' 岁'));
@@ -1536,7 +1550,7 @@
     }).join('');
     box.innerHTML = `<table class="stage-tbl"><thead><tr><th>年龄段 · 职业阶段</th><th>税后工资收入（万/年）</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
   }
-  // 初始渲染税后工资分段表（此刻 SALARY_BANDS 已初始化）
+  // 初始渲染税后工资分段表（此刻 buildSalaryBands 已定义）
   renderWageBands();
 
   // ---- 动态：生娃可逐个添加孩子（出生年覆盖过去与未来）----
