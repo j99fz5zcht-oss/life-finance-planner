@@ -1520,18 +1520,20 @@
     if(mid<56) return 33;
     return 28;
   }
+  // 固定档位网格：22–25 / 26–30 / 31–35 / 36–40 / 41–45 / 46–50 / 51–55 / 56–60 ……
+  // （首档 4 年，其后每档 5 年；内部仍为左闭右开，界面显示 from–(to-1)）
+  const BAND_GRID = [
+    {from:22,to:26},{from:26,to:31},{from:31,to:36},{from:36,to:41},{from:41,to:46},
+    {from:46,to:51},{from:51,to:56},{from:56,to:61},{from:61,to:66},{from:66,to:71},
+    {from:71,to:76},{from:76,to:81},{from:81,to:86},{from:86,to:91},{from:91,to:121}
+  ];
+  // 起始档 = 包含「当前年龄 + 1」的那一档（即下一年所在的档），之后按网格逐档排到退休年龄。
+  // 这样 22 岁 → 22–25 起；35 岁 → 36–40 起（不会切出只剩一年的零头段）。
   function buildSalaryBands(curAge, ret){
-    const out=[]; let f=curAge;
-    while(f<=ret){
-      let t=Math.min(f+4, ret);
-      // 尾巴不足 5 年时并入本段，避免出现「只剩一年」的零头段
-      const remain = ret - t;
-      if(remain>0 && remain<5) t=ret;
-      const mid=(f+t)/2;
-      out.push({ from:f, to:t+1, label:bandLabel(mid), def:bandDef(mid) });
-      f=t+1;
-    }
-    return out;
+    const start = curAge + 1;
+    return BAND_GRID.filter(b => b.to > start && b.from <= ret)
+      .map(b => { const last=Math.min(b.to-1, ret); const mid=(b.from+last)/2;
+        return { from:b.from, to:b.to, showTo:last, label:bandLabel(mid), def:bandDef(mid) }; });
   }
   // 渲染税后工资按年龄段的填写表：仅展示与 [当前年龄, 退休年龄] 相交的段
   function renderWageBands(){
@@ -1543,12 +1545,15 @@
     const shown = buildSalaryBands(curAge, ret);
     if(!shown.length){ box.innerHTML='<div class="stage-head">当前年龄已到 / 超过退休年龄，无需填写在职工资。</div>'; return; }
     const rowsHtml = shown.map((b,i)=>{
-      const rangeLab = (b.to>99) ? (b.from+' 岁–退休前') : ((b.to-b.from)===1 ? (b.from+' 岁（仅本年）') : (b.from+'–'+(b.to-1)+' 岁'));
+      const rangeLab = (b.showTo!=null && b.showTo>b.from) ? (b.from+'–'+b.showTo+' 岁') : (b.from+' 岁（仅本年）');
       const lab = rangeLab+' · '+b.label;
       const note = (i===0 && b.from===curAge) ? ` <span class="age">（自当前 ${curAge} 岁起算）</span>` : '';
       return `<tr><td>${lab}${note}</td><td><input type="number" id="wb_${i}" class="wb" data-from="${b.from}" data-to="${b.to}" min="0" step="0.5" value="${b.def}"> 万/年</td></tr>`;
     }).join('');
-    box.innerHTML = `<table class="stage-tbl"><thead><tr><th>年龄段 · 职业阶段</th><th>税后工资收入（万/年）</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    const headNote = (curAge < shown[0].from)
+      ? '<div class="stage-head" style="margin-bottom:8px">当前 '+curAge+' 岁刚好跨在两档之间，未落入下面任何一段，该年按 <b>0 收入</b> 计；若这一年仍有收入，请把这笔金额并入下面第一段。</div>'
+      : '';
+    box.innerHTML = headNote + `<table class="stage-tbl"><thead><tr><th>年龄段 · 职业阶段</th><th>税后工资收入（万/年）</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
   }
   // 初始渲染税后工资分段表（此刻 buildSalaryBands 已定义）
   renderWageBands();
